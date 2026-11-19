@@ -1,0 +1,3 @@
+PRODUCTION-STORY-SNAPSHOT.json
+reports/*.json
+!reports/.keep

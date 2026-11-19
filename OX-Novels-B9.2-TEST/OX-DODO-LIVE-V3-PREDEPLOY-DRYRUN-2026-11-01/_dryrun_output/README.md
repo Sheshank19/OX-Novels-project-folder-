@@ -1,0 +1,1 @@
+This folder contains the built output assets for the worker "ox-novels" generated at 2026-11-01T14:29:16.553Z.

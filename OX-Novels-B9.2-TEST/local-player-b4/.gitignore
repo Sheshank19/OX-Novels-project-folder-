@@ -1,0 +1,4 @@
+.player-account-id
+backups/
+.wrangler/
+node_modules/

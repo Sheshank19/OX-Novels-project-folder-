@@ -1,0 +1,20 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+const here=path.dirname(fileURLToPath(import.meta.url));
+const b8Root=path.resolve(here,'..');
+const oxRoot=path.resolve(b8Root,'..');
+const target=path.join(oxRoot,'local-player-b6','PRODUCTION-STORY-SNAPSHOT.json');
+const source=String(process.argv[2]||'').trim();
+if(!source)throw new Error('Snapshot file path is required.');
+if(!fs.existsSync(source))throw new Error(`File not found: ${source}`);
+const data=JSON.parse(fs.readFileSync(source,'utf8'));
+const snapshot=data?.snapshot&&Array.isArray(data.snapshot.stories)?data.snapshot:data;
+if(!snapshot||!Array.isArray(snapshot.stories))throw new Error('This is not a Player production story snapshot.');
+if(snapshot.stories.length<1)throw new Error('Snapshot has no stories.');
+for(const row of snapshot.stories){if(!row||!String(row.id||'').trim())throw new Error('Snapshot contains a story without an ID.');}
+const normalized={format:String(snapshot.format||'ox-player-story-snapshot'),version:Number(snapshot.version||1),generatedAt:String(snapshot.generatedAt||new Date().toISOString()),source:String(snapshot.source||'oxnovels-admin'),stories:snapshot.stories};
+const temp=target+'.tmp';fs.writeFileSync(temp,JSON.stringify(normalized,null,2));fs.renameSync(temp,target);
+console.log(`Imported ${normalized.stories.length} stories.`);
+console.log(`Saved: ${target}`);
+console.log('B6/B8 will now use this production snapshot instead of the local D1 until the snapshot file is removed.');

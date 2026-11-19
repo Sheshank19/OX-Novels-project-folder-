@@ -1,0 +1,5 @@
+# Local development only. Do not upload this file or share the password.
+ADMIN_PASSWORD=choose-a-strong-local-password
+
+# PayPal Subscriptions (server-side secret only)
+# PAYPAL_CLIENT_SECRET=your-paypal-client-secret

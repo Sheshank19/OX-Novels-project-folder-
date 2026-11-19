@@ -1,0 +1,92 @@
+﻿[
+    {
+        "path":  "49.html",
+        "bytes":  14642,
+        "sha256":  "b6fc0d8476decaf363042315b494bc4d87c934c2626a08673a0e3759ae1ff2aa"
+    },
+    {
+        "path":  "admin.html",
+        "bytes":  5814,
+        "sha256":  "cac9fdf157c38ce29dc3e2f2f37146c8c9c6900313d4e5164521aaaebad7516b"
+    },
+    {
+        "path":  "app.js",
+        "bytes":  2154,
+        "sha256":  "e365e0cb355fc0a0ee906b1640e34a0a1b6ae7fc20178a68d2f39407e6316556"
+    },
+    {
+        "path":  "contact.html",
+        "bytes":  3722,
+        "sha256":  "e5f2c13f5739febbb854d0d0098babda8b79674e1c81b8c04daa37ebee445e11"
+    },
+    {
+        "path":  "index.html",
+        "bytes":  19105,
+        "sha256":  "dc5359b19e63c75b21269fd89a0f6cbc18cfcf65bc6d4c58c67b847787a57fa0"
+    },
+    {
+        "path":  "privacy.html",
+        "bytes":  8828,
+        "sha256":  "9d2ffb1aaa7217eec1036c24bf32c06d095a56d81dc3b841196e65b48ff877fa"
+    },
+    {
+        "path":  "raptor-migrate.html",
+        "bytes":  9013,
+        "sha256":  "38fd3a21b42049a5f2d2d2cfb5076baad513caa819ed9a6029ded473ba135796"
+    },
+    {
+        "path":  "refund-policy.html",
+        "bytes":  5835,
+        "sha256":  "ddc2f6eb0303796005f98fa74ff80f9cc76fc4718074da5f03b5095f9da6c933"
+    },
+    {
+        "path":  "style.css",
+        "bytes":  6993,
+        "sha256":  "b7228919e53cd3bf81e637f6cb3c1b95b939cbe025c750eb205e3b40811eece7"
+    },
+    {
+        "path":  "terms.html",
+        "bytes":  11875,
+        "sha256":  "0cd8e9a3f45a152a7c13927231eaae45fcb986ded4584ac5427c6ff0b299e4b1"
+    },
+    {
+        "path":  "assets/admin.css",
+        "bytes":  57784,
+        "sha256":  "c8ba8cdd8d18ab559b4e63fd195f3d1b32760ced20b57abe609590e7260015fc"
+    },
+    {
+        "path":  "assets/admin.js",
+        "bytes":  241446,
+        "sha256":  "80e6ca6c59cbc725023a8f9b3b2fc7afd07653fca5c2ec66df7b5c4299d30801"
+    },
+    {
+        "path":  "assets/app-before-telegram-startup-sync.js",
+        "bytes":  150196,
+        "sha256":  "cb472e08df9c306e34bdb94ba09d3e0e57f8c3f2ceae463bffd0fca36128f6d6"
+    },
+    {
+        "path":  "assets/app.js",
+        "bytes":  159119,
+        "sha256":  "6d1ef9d5cb9c89645dabf542919173bb97a9469e5b7201f8672223ea1991bac8"
+    },
+    {
+        "path":  "assets/legal.css",
+        "bytes":  3053,
+        "sha256":  "24e96705e402a1cafdcf8726f977f89e6accbf124264c495c6dd5c2f854ab8d7"
+    },
+    {
+        "path":  "assets/lifetime.css",
+        "bytes":  353,
+        "sha256":  "090034cd6f95207f3100683a48881885617d2087fe655dff7bbedce02e424711"
+    },
+    {
+        "path":  "assets/lifetime.js",
+        "bytes":  22887,
+        "sha256":  "d5de6b206217c7d77e73c3ddc5fddc52e6bfc5e0452ff3964af0e9bc3f637bab"
+    },
+    {
+        "path":  "assets/styles.css",
+        "bytes":  139635,
+        "sha256":  "991fad656b1906bead1f1a7d8434cc7be4ceb1848326433a86760e78e5d0bd99"
+    }
+]

@@ -1,0 +1,35 @@
+OX NOVELS B8.2 CLEANUP REPORT
+==============================
+
+Kept as current/required:
+- Production source: src/, public/, migrations/, scripts/, apps-script/ template
+- Current Player engine/catalog state: local-player-b5/
+- Current lifecycle/reconciliation tools: local-player-b6/
+- Current Player Catalog Manager: local-player-b8-catalog-manager/
+- Current audio catalog cache used for future incremental refreshes: local-audio-lab/cache/
+- Secure handoff setup scripts: local-player-handoff/ (private key itself is not included)
+- Existing setup/start/clone BAT files and package metadata
+
+Removed from this CLEAN archive because they are obsolete/reinstallable/private:
+- node_modules/ (reinstallable with npm install)
+- .wrangler/ local runtime/D1 state (keep your existing local copy when merging)
+- old B3/B4/B6 patch-builder/fix folders that have already been applied
+- old Telegram/request-optimization/login-fix backup folders
+- old generated B3 Workers and manifests
+- old SQL/D1 backup files
+- old Drive scan result/test URL files
+- unreferenced legacy public/app.js and public/style.css
+- old app-before-telegram-startup-sync.js
+- Apps Script READY file containing the configured private key; only the safe template remains
+- local test WAV audio
+- transient B6 reports (recreated automatically)
+
+Private files intentionally excluded:
+- .dev.vars
+- .dev.vars.live-backup
+- local-player-handoff/.env.player-handoff
+- local-audio-lab/config/resolver.local.json
+
+IMPORTANT:
+Merge this folder over your existing C:\Users\dundi\OX-Novels folder.
+Do NOT delete the current folder first. Files intentionally omitted above will remain in place.

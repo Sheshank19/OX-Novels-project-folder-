@@ -1,0 +1,16 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+const here = path.dirname(fileURLToPath(import.meta.url));
+const root = path.resolve(here, '..');
+const backupDir = path.join(here, 'backups');
+const appBackup = path.join(backupDir, 'app.js.before-player-handoff');
+const workerBackup = path.join(backupDir, 'index.js.before-player-handoff');
+if (!fs.existsSync(appBackup) || !fs.existsSync(workerBackup)) throw new Error('Player handoff backups were not found.');
+fs.copyFileSync(appBackup, path.join(root, 'public', 'assets', 'app.js'));
+fs.copyFileSync(workerBackup, path.join(root, 'src', 'index.js'));
+const starter = path.join(root, 'START-OX-NOVELS-PLAYER-HANDOFF-TEST.bat');
+if (fs.existsSync(starter)) fs.rmSync(starter);
+console.log('Restored OX files to their exact pre-Player-handoff state.');
+console.log('Request-optimization changes remain if they existed before this connector was installed.');
+console.log('The local handoff key file was intentionally kept.');

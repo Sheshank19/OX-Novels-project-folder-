@@ -1,0 +1,7 @@
+// Add immediately BEFORE:
+//     const openMatch = pathname.match(/^\/api\/story\/([^/]+)\/open$/);
+// in the main oxnovels.top Worker's fetch handler.
+const b92PlayerCanaryMatch = pathname.match(/^\/api\/story\/([^/]+)\/player-launch$/);
+if (b92PlayerCanaryMatch && request.method === 'GET') {
+  return b92CanaryPlayerLanding(request, env, decodeURIComponent(b92PlayerCanaryMatch[1]));
+}

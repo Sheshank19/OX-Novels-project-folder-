@@ -1,0 +1,670 @@
+--- original/main-worker.mjs
++++ review-v2/main-worker.mjs
+@@ -5085,6 +5085,613 @@
+   }
+ }
+ __name(handleDodoTestWebhook, "handleDodoTestWebhook");
++// B9.2 PAYMENT LIVE: stage-only integration. Fail closed until configured.
++const DODO_LIVE_LIFETIME_PRICE = '65.00';
++function dodoLiveProductByTier(env) {
++  return { premium: String(env.DODO_LIVE_PREMIUM_PRODUCT_ID || '').trim() };
++}
++function dodoLiveWebhookReady(env) {
++  // Payments already made must remain fulfillable if new checkouts are paused.
++  return Boolean(String(env.DODO_PAYMENTS_LIVE_WEBHOOK_KEY || '').trim());
++}
++__name(dodoLiveWebhookReady,"dodoLiveWebhookReady");
++function dodoLiveEnabled(env) {
++  return String(env.OX_ENABLE_DODO_LIVE || '') === '1' &&
++    Boolean(String(env.DODO_PAYMENTS_LIVE_API_KEY || '').trim()) &&
++    Boolean(String(env.DODO_LIVE_PREMIUM_PRODUCT_ID || '').trim()) &&
++    Boolean(String(env.DODO_LIVE_LIFETIME_PRODUCT_ID || '').trim()) &&
++    dodoLiveWebhookReady(env);
++}
++__name(dodoLiveEnabled,"dodoLiveEnabled");
++function oxValidPaidThrough(row) {
++  if (!row) return false;
++  const status = String(row.status || '').toUpperCase();
++  if (status === 'ACTIVE') return true;
++  if (status !== 'CANCELLED') return false;
++  const future = Date.parse(row.next_billing_at || '');
++  return Number.isFinite(future) && future > Date.now();
++}
++__name(oxValidPaidThrough,'oxValidPaidThrough');
++async function oxReconcilePaidProviders(env, userId, previousUser = null) {
++  if (!userId) return;
++  const user = await env.DB.prepare(`SELECT id,account_status,membership_status,membership_plan,membership_tier_id,
++    membership_expires_at FROM users WHERE id=?`).bind(userId).first();
++  if (!user || user.account_status === 'Blocked') return;
++  // Never overwrite a manual grant, including one existing before an event modified the user projection.
++  if (user.membership_status === 'Granted' || previousUser?.membership_status === 'Granted') {
++    if (previousUser?.membership_status === 'Granted' && user.membership_status !== 'Granted') {
++      await env.DB.prepare(`UPDATE users SET membership_status='Granted',membership_plan=?,membership_tier_id=?,
++        membership_expires_at=?,updated_at=? WHERE id=?`).bind(previousUser.membership_plan || 'Admin Grant',
++        previousUser.membership_tier_id || null,previousUser.membership_expires_at || null,
++        new Date().toISOString(),userId).run();
++    }
++    return;
++  }
++  const sub = await env.DB.prepare(`SELECT provider,status,environment,tier_id,next_billing_at,
++    last_payment_at,updated_at FROM member_subscriptions WHERE user_id=?
++    AND ((provider='paypal' AND environment='live') OR (provider='dodo' AND environment='live_mode'))
++    ORDER BY updated_at DESC LIMIT 60`).bind(userId).all();
++  const eligible=(sub.results||[]).filter(oxValidPaidThrough).sort((a,b)=>
++    (a.provider==='paypal'?-1:1)-(b.provider==='paypal'?-1:1));
++  const chosen=eligible[0];
++  const managed=await env.DB.prepare(`SELECT user_id FROM dodo_live_membership_control WHERE user_id=?`).bind(userId).first();
++  if (chosen) {
++    const isPayPal=chosen.provider==='paypal';
++    // Don't convert an unrelated manual ACTIVE membership into Dodo-managed access.
++    if (!isPayPal && !managed && user.membership_status==='Active') return;
++    const tier=chosen.tier_id ? await env.DB.prepare(`SELECT id,name,price FROM membership_tiers WHERE id=?`)
++      .bind(chosen.tier_id).first() : null;
++    if (!isPayPal && !managed) {
++      await env.DB.prepare(`INSERT OR IGNORE INTO dodo_live_membership_control(user_id,created_at)
++        VALUES(?,?)`).bind(userId,new Date().toISOString()).run();
++    }
++    const expiry=String(chosen.status).toUpperCase()==='CANCELLED' ? chosen.next_billing_at : null;
++    await env.DB.prepare(`UPDATE users SET membership_status='Active',
++      membership_tier_id=COALESCE(?,membership_tier_id),membership_plan=COALESCE(?,membership_plan),
++      membership_expires_at=?,payment_status=?,updated_at=? WHERE id=?`).bind(
++        tier?.id||null,tier?.name||null,expiry,expiry?'Cancelled':'Paid',new Date().toISOString(),userId).run();
++  } else if (managed) {
++    // Only revoke membership records previously projected by Dodo Live.
++    await env.DB.prepare(`UPDATE users SET membership_status='Expired',membership_expires_at=NULL,
++      payment_status='Expired',updated_at=? WHERE id=?`).bind(new Date().toISOString(),userId).run();
++  }
++}
++__name(oxReconcilePaidProviders, 'oxReconcilePaidProviders');
++async function dodoLiveRequest(env, path, options = {}) {
++  const apiKey = String(env.DODO_PAYMENTS_LIVE_API_KEY || "").trim();
++  if (!apiKey) throw new Error("Dodo Payments live API key is not configured on the server.");
++  const response = await fetch(`https://live.dodopayments.com${path}`, {
++    ...options,
++    headers: {
++      accept: "application/json",
++      "content-type": "application/json",
++      authorization: `Bearer ${apiKey}`,
++      ...options.headers || {}
++    }
++  });
++  const text = await response.text();
++  let payload = {};
++  if (text) {
++    try {
++      payload = JSON.parse(text);
++    } catch {
++      payload = { message: text.slice(0, 500) };
++    }
++  }
++  if (!response.ok) {
++    throw new Error(dodoErrorMessage(payload, `Dodo Payments returned HTTP ${response.status}.`));
++  }
++  return payload;
++}
++__name(dodoLiveRequest, "dodoLiveRequest");
++
++async function handleDodoLiveCheckout(request, env, url) {
++  const user = await getCurrentUser(request, env);
++  if (!user) return json({ error: "Log in before starting the Dodo live checkout.", code: "LOGIN_REQUIRED" }, 401);
++  if (membershipIsActive(user)) return json({ error: "Your membership is already active." }, 409);
++  let body = {};
++  try {
++    body = await request.json();
++  } catch {
++    return json({ error: "Invalid request." }, 400);
++  }
++  const tierId = String(body.tierId || "").trim();
++  const tier = await env.DB.prepare("SELECT id,name,price,cycle,status FROM membership_tiers WHERE id=? AND status='Published'").bind(tierId).first();
++  if (!tier) return json({ error: "This membership tier is not available." }, 404);
++  const productId = String(dodoLiveProductByTier(env)[tierId] || "").trim();
++  if (!productId) {
++    return json({ error: "This membership tier does not have a Dodo live product yet.", code: "DODO_TEST_PRODUCT_NOT_CONFIGURED" }, 409);
++  }
++  const token = crypto.randomUUID();
++  const now = /* @__PURE__ */ new Date();
++  const expires = new Date(now.getTime() + 30 * 60 * 1e3);
++  await env.DB.prepare(`INSERT INTO payment_checkout_sessions(token,user_id,tier_id,provider,external_plan_id,environment,created_at,expires_at)
++    VALUES(?,?,?,'dodo',?,'live_mode',?,?)`).bind(token, user.id, tier.id, productId, now.toISOString(), expires.toISOString()).run();
++  const returnUrl = new URL("/", url);
++  returnUrl.searchParams.set("dodo_live", "1");
++  returnUrl.searchParams.set("dodo", "return");
++  const cancelUrl = new URL("/", url);
++  cancelUrl.searchParams.set("dodo_live", "1");
++  cancelUrl.searchParams.set("dodo", "cancelled");
++  try {
++    const checkout = await dodoLiveRequest(env, "/checkouts", {
++      method: "POST",
++      body: JSON.stringify({
++        product_cart: [{ product_id: productId, quantity: 1 }],
++        customer: {
++          email: String(user.email || "").trim(),
++          name: String(user.name || user.email || "OX Novels Member").trim()
++        },
++        metadata: {
++          ox_checkout_token: token,
++          ox_user_id: String(user.id),
++          ox_tier_id: String(tier.id),
++          ox_environment: "live_mode"
++        },
++        return_url: returnUrl.toString(),
++        cancel_url: cancelUrl.toString(),
++        feature_flags: {
++          allow_customer_editing_email: false,
++          allow_customer_editing_name: false,
++          redirect_immediately: true
++        },
++        customization: {
++          theme: "system",
++          show_order_details: true
++        }
++      })
++    });
++    const checkoutUrl = String(checkout.checkout_url || "").trim();
++    if (!checkoutUrl) throw new Error("Dodo Payments did not return a checkout URL.");
++    await env.DB.prepare("INSERT INTO activity_log(type,title,detail,created_at) VALUES('payment',?,?,?)").bind("Dodo live checkout created", `${user.email} \xB7 ${tier.name} \xB7 ${checkout.session_id || token}.`, (/* @__PURE__ */ new Date()).toISOString()).run().catch(() => null);
++    return json({
++      ok: true,
++      provider: "dodo",
++      environment: "live_mode",
++      checkoutUrl,
++      sessionId: String(checkout.session_id || ""),
++      tier: { id: tier.id, name: tier.name, price: tier.price, cycle: tier.cycle }
++    });
++  } catch (error) {
++    await env.DB.prepare("DELETE FROM payment_checkout_sessions WHERE token=? AND provider='dodo'").bind(token).run().catch(() => null);
++    return json({ error: error.message || "Unable to create Dodo live checkout." }, 400);
++  }
++}
++__name(handleDodoLiveCheckout, "handleDodoLiveCheckout");
++
++async function handleDodoLifetimeLiveCheckout(request, env, url) {
++  const user = await getCurrentUser(request, env);
++  if (!user) return json({ error: "Continue with Google before payment.", code: "LOGIN_REQUIRED" }, 401);
++  if (user.account_status !== "Active") return json({ error: "This account cannot make purchases.", code: "ACCOUNT_NOT_ACTIVE" }, 403);
++  let body = {};
++  try {
++    body = await request.json();
++  } catch {
++    return json({ error: "Invalid request." }, 400);
++  }
++  const story = await lifetimePurchasableStory(env, body.storyId);
++  if (!story) return json({ error: "This story is not available for lifetime purchase.", code: "STORY_NOT_PURCHASABLE" }, 404);
++  const owned = await activeLifetimePurchase(env, user.id, story.permanent_story_id);
++  if (owned) return json({ ok: true, alreadyPurchased: true, storyId: story.id, purchaseId: owned.id });
++  const productId = String(String(env.DODO_LIVE_LIFETIME_PRODUCT_ID || '').trim() || "").trim();
++  if (!productId) return json({ error: "Dodo Lifetime Story live product is not configured.", code: "DODO_LIFETIME_PRODUCT_NOT_CONFIGURED" }, 409);
++  const now = /* @__PURE__ */ new Date();
++  const nowIso = now.toISOString();
++  await env.DB.prepare(`UPDATE dodo_lifetime_checkout_sessions SET status='EXPIRED'
++    WHERE user_id=? AND permanent_story_id=? AND status IN ('INIT','CREATED') AND expires_at<=?`).bind(user.id, story.permanent_story_id, nowIso).run().catch(() => null);
++  const reusable = await env.DB.prepare(`SELECT token,checkout_session_id,checkout_url,product_id,expires_at
++    FROM dodo_lifetime_checkout_sessions
++    WHERE user_id=? AND permanent_story_id=? AND environment='live_mode' AND status='CREATED' AND expires_at>?
++    ORDER BY created_at DESC LIMIT 1`).bind(user.id, story.permanent_story_id, nowIso).first().catch(() => null);
++  if (reusable?.checkout_session_id && reusable?.checkout_url && String(reusable.product_id || "") === productId) {
++    return json({
++      ok: true,
++      provider: "dodo",
++      environment: "live_mode",
++      checkoutUrl: reusable.checkout_url,
++      sessionId: reusable.checkout_session_id,
++      storyId: story.id,
++      reused: true
++    });
++  }
++  const token = crypto.randomUUID();
++  const expiresAt = new Date(now.getTime() + LIFETIME_CHECKOUT_MAX_AGE_MS).toISOString();
++  const driveFolderId = lifetimeDriveFolderId(story.drive_url);
++  await env.DB.prepare(`INSERT INTO dodo_lifetime_checkout_sessions(
++    token,checkout_session_id,checkout_url,payment_id,user_id,permanent_story_id,story_id_snapshot,title_snapshot,
++    drive_url_snapshot,drive_folder_id_snapshot,cover_snapshot,product_id,amount,currency,environment,status,created_at,expires_at
++  ) VALUES(?,NULL,'',NULL,?,?,?,?,?,?,?,?,?,?,'live_mode','INIT',?,?)`).bind(
++    token,
++    user.id,
++    story.permanent_story_id,
++    story.id,
++    story.title || "",
++    story.drive_url || "",
++    driveFolderId,
++    story.cover || "",
++    productId,
++    DODO_LIVE_LIFETIME_PRICE,
++    LIFETIME_STORY_CURRENCY,
++    nowIso,
++    expiresAt
++  ).run();
++  const returnUrl = new URL("/49", url);
++  returnUrl.searchParams.set("story", story.id);
++  returnUrl.searchParams.set("dodo_live", "1");
++  returnUrl.searchParams.set("dodo_lifetime", "return");
++  const cancelUrl = new URL("/49", url);
++  cancelUrl.searchParams.set("story", story.id);
++  cancelUrl.searchParams.set("dodo_live", "1");
++  cancelUrl.searchParams.set("dodo_lifetime", "cancelled");
++  try {
++    const checkout = await dodoLiveRequest(env, "/checkouts", {
++      method: "POST",
++      body: JSON.stringify({
++        product_cart: [{ product_id: productId, quantity: 1 }],
++        customer: {
++          email: String(user.email || "").trim(),
++          name: String(user.name || user.email || "OX Novels Customer").trim()
++        },
++        metadata: {
++          ox_purchase_type: "lifetime_story",
++          ox_lifetime_token: token,
++          ox_user_id: String(user.id),
++          ox_story_id: String(story.id),
++          ox_permanent_story_id: String(story.permanent_story_id),
++          ox_product_id: productId,
++          ox_environment: "live_mode"
++        },
++        return_url: returnUrl.toString(),
++        cancel_url: cancelUrl.toString(),
++        feature_flags: {
++          allow_customer_editing_email: false,
++          allow_customer_editing_name: false,
++          redirect_immediately: true
++        },
++        customization: {
++          theme: "system",
++          show_order_details: true
++        }
++      })
++    });
++    const checkoutUrl = String(checkout.checkout_url || "").trim();
++    const sessionId = String(checkout.session_id || "").trim();
++    if (!checkoutUrl || !sessionId) throw new Error("Dodo Payments did not return a complete checkout session.");
++    await env.DB.batch([
++      env.DB.prepare(`UPDATE dodo_lifetime_checkout_sessions
++        SET checkout_session_id=?,checkout_url=?,status='CREATED' WHERE token=?`).bind(sessionId, checkoutUrl, token),
++      env.DB.prepare("INSERT INTO activity_log(type,title,detail,created_at) VALUES('payment','Dodo lifetime test checkout created',?,?)").bind(`${user.email} \xB7 ${story.title} \xB7 ${sessionId}.`, (/* @__PURE__ */ new Date()).toISOString())
++    ]);
++    return json({
++      ok: true,
++      provider: "dodo",
++      environment: "live_mode",
++      checkoutUrl,
++      sessionId,
++      storyId: story.id,
++      title: story.title,
++      amount: DODO_LIVE_LIFETIME_PRICE,
++      currency: LIFETIME_STORY_CURRENCY
++    });
++  } catch (error) {
++    await env.DB.prepare("UPDATE dodo_lifetime_checkout_sessions SET status='ERROR' WHERE token=?").bind(token).run().catch(() => null);
++    return json({ error: error.message || "Unable to create Dodo Lifetime Story live checkout." }, 400);
++  }
++}
++__name(handleDodoLifetimeLiveCheckout, "handleDodoLifetimeLiveCheckout");
++
++async function verifyDodoLiveWebhook(request, env, rawBody) {
++  const secret = String(env.DODO_PAYMENTS_LIVE_WEBHOOK_KEY || "").trim();
++  if (!secret) throw new Error("Dodo live webhook secret is not configured.");
++  const webhookId = String(request.headers.get("webhook-id") || "").trim();
++  const timestamp = String(request.headers.get("webhook-timestamp") || "").trim();
++  const signatureHeader = String(request.headers.get("webhook-signature") || "").trim();
++  if (!webhookId || !timestamp || !signatureHeader) return false;
++  const timestampSeconds = Number(timestamp);
++  if (!Number.isFinite(timestampSeconds) || Math.abs(Date.now() / 1e3 - timestampSeconds) > 300) return false;
++  let secretBytes;
++  try {
++    secretBytes = dodoWebhookSecretBytes(secret);
++  } catch {
++    throw new Error("Dodo live webhook secret is invalid.");
++  }
++  const signed = `${webhookId}.${timestamp}.${rawBody}`;
++  const key = await crypto.subtle.importKey(
++    "raw",
++    secretBytes,
++    { name: "HMAC", hash: "SHA-256" },
++    false,
++    ["sign"]
++  );
++  const mac = new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(signed)));
++  const expected = dodoBase64(mac);
++  const candidates = signatureHeader.split(/\s+/).map((part) => {
++    const match = part.match(/^v1,(.+)$/);
++    return match ? String(match[1]).replace(/=+$/g, "") : "";
++  }).filter(Boolean);
++  return candidates.some((candidate) => dodoSafeEqual(candidate, expected));
++}
++__name(verifyDodoLiveWebhook, "verifyDodoLiveWebhook");
++
++function dodoLiveTierIdForProduct(productId, env) {
++  const wanted = String(productId || "").trim();
++  for (const [tierId, mappedProductId] of Object.entries(dodoLiveProductByTier(env))) {
++    if (String(mappedProductId) === wanted) return tierId;
++  }
++  return "";
++}
++__name(dodoLiveTierIdForProduct, "dodoLiveTierIdForProduct");
++
++async function resolveDodoLiveWebhookOwner(env, data) {
++  const metadata = data && typeof data.metadata === "object" && data.metadata ? data.metadata : {};
++  const productId = String(data?.product_id || "").trim();
++  const subscriptionId = String(data?.subscription_id || "").trim();
++  const token = String(metadata.ox_checkout_token || "").trim();
++  if (subscriptionId) {
++    const existing = await env.DB.prepare(
++      "SELECT user_id,tier_id,external_plan_id FROM member_subscriptions WHERE provider='dodo' AND environment='live_mode' AND provider_subscription_id=? LIMIT 1"
++    ).bind(subscriptionId).first().catch(() => null);
++    if (existing) return { user_id: existing.user_id, tier_id: existing.tier_id, token: "", product_id: existing.external_plan_id || productId };
++  }
++  if (token) {
++    const checkout = await env.DB.prepare(`SELECT token,user_id,tier_id,external_plan_id,environment
++      FROM payment_checkout_sessions WHERE token=? AND provider='dodo' LIMIT 1`).bind(token).first().catch(() => null);
++    if (checkout) {
++      if (String(checkout.environment || "") !== "live_mode") return null;
++      if (productId && String(checkout.external_plan_id || "") !== productId) return null;
++      if (metadata.ox_user_id && String(metadata.ox_user_id) !== String(checkout.user_id)) return null;
++      if (metadata.ox_tier_id && String(metadata.ox_tier_id) !== String(checkout.tier_id)) return null;
++      return { user_id: checkout.user_id, tier_id: checkout.tier_id, token: checkout.token, product_id: checkout.external_plan_id || productId };
++    }
++  }
++
++  return null;
++}
++__name(resolveDodoLiveWebhookOwner, "resolveDodoLiveWebhookOwner");
++
++async function saveDodoLiveSubscription(env, owner, data, eventType) {
++  const now=new Date().toISOString();
++  const subscriptionId=String(data?.subscription_id || '').trim();
++  const expected=String(dodoLiveProductByTier(env)[owner?.tier_id] || '').trim();
++  const productId=String(data?.product_id || owner?.product_id || '').trim();
++  if (!subscriptionId || !owner?.user_id || !owner?.tier_id || !expected || productId !== expected)
++    throw new Error('Dodo Live subscription mapping failed');
++  const prior=await env.DB.prepare(`SELECT membership_status,membership_plan,membership_tier_id,
++    membership_expires_at FROM users WHERE id=?`).bind(owner.user_id).first();
++  const existingSubscription=await env.DB.prepare(`SELECT provider,environment,user_id FROM member_subscriptions
++    WHERE provider_subscription_id=?`).bind(subscriptionId).first();
++  if (existingSubscription && (existingSubscription.provider!=='dodo' ||
++      existingSubscription.environment!=='live_mode' ||
++      String(existingSubscription.user_id)!==String(owner.user_id)))
++    throw new Error('Dodo Live subscription ownership mismatch');
++  const status=dodoStatusForEvent(eventType,data);
++  const nextBilling=data?.next_billing_date || null;
++  const lastPayment=['subscription.active','subscription.renewed'].includes(eventType)
++    ? (data?.previous_billing_date || now) : data?.previous_billing_date || null;
++  await env.DB.prepare(`INSERT INTO member_subscriptions(
++    provider_subscription_id,provider,user_id,tier_id,external_plan_id,environment,status,
++    next_billing_at,last_payment_at,started_at,cancelled_at,created_at,updated_at)
++    VALUES(?,'dodo',?,?,?,'live_mode',?,?,?,?,?,?,?)
++    ON CONFLICT(provider_subscription_id) DO UPDATE SET
++      status=excluded.status,
++      next_billing_at=COALESCE(excluded.next_billing_at,member_subscriptions.next_billing_at),
++      last_payment_at=COALESCE(excluded.last_payment_at,member_subscriptions.last_payment_at),
++      cancelled_at=excluded.cancelled_at,updated_at=excluded.updated_at`).bind(
++        subscriptionId,owner.user_id,owner.tier_id,productId,status,nextBilling,lastPayment,
++        data?.created_at || now,data?.cancelled_at || (status==='CANCELLED'?now:null),now,now).run();
++  await oxReconcilePaidProviders(env,owner.user_id,prior);
++  if (owner.token) await env.DB.prepare(`UPDATE payment_checkout_sessions SET used_at=COALESCE(used_at,?)
++    WHERE token=? AND provider='dodo' AND environment='live_mode'`).bind(now,owner.token).run();
++  return {subscriptionId,status,nextBilling};
++}
++__name(saveDodoLiveSubscription,'saveDodoLiveSubscription');
++
++async function handleDodoLiveLifetimePaymentEvent(env, type, data) {
++  const metadata = data && typeof data.metadata === "object" && data.metadata ? data.metadata : {};
++  if (String(metadata.ox_purchase_type || "") !== "lifetime_story") return { handled: false };
++  const token = String(metadata.ox_lifetime_token || "").trim();
++  if (!token) throw new Error("Dodo Lifetime Story payment is missing the OX checkout token.");
++  const checkout = await env.DB.prepare(`SELECT * FROM dodo_lifetime_checkout_sessions
++    WHERE token=? AND environment='live_mode' LIMIT 1`).bind(token).first().catch(() => null);
++  if (!checkout) throw new Error("Dodo Lifetime Story checkout was not found.");
++  if (metadata.ox_user_id && String(metadata.ox_user_id) !== String(checkout.user_id)) {
++    throw new Error("Dodo Lifetime Story user verification failed.");
++  }
++  if (metadata.ox_story_id && String(metadata.ox_story_id) !== String(checkout.story_id_snapshot)) {
++    throw new Error("Dodo Lifetime Story story verification failed.");
++  }
++  if (metadata.ox_permanent_story_id && String(metadata.ox_permanent_story_id) !== String(checkout.permanent_story_id)) {
++    throw new Error("Dodo Lifetime Story identity verification failed.");
++  }
++  const checkoutSessionId = String(data?.checkout_session_id || "").trim();
++  if (checkoutSessionId && String(checkout.checkout_session_id || "") && checkoutSessionId !== String(checkout.checkout_session_id)) {
++    throw new Error("Dodo Lifetime Story checkout-session verification failed.");
++  }
++  const paymentId = String(data?.payment_id || "").trim();
++  const user = await env.DB.prepare("SELECT id,name,email FROM users WHERE id=? LIMIT 1").bind(checkout.user_id).first();
++  if (!user) throw new Error("OX customer no longer exists for this checkout.");
++  const customerEmail = String(data?.customer?.email || "").trim().toLowerCase();
++  if (customerEmail && customerEmail !== String(user.email || "").trim().toLowerCase()) {
++    throw new Error("Dodo Lifetime Story customer verification failed.");
++  }
++  if (type === "payment.failed" || type === "payment.cancelled") {
++    const status = type === "payment.failed" ? "FAILED" : "CANCELLED";
++    await env.DB.prepare(`UPDATE dodo_lifetime_checkout_sessions
++      SET status=?,payment_id=COALESCE(payment_id,?) WHERE token=? AND status<>'COMPLETED'`).bind(status, paymentId || null, token).run();
++    return { handled: true, userId: user.id, paymentId, status, completed: false };
++  }
++  if (type !== "payment.succeeded") {
++    return { handled: true, userId: user.id, paymentId, status: String(checkout.status || "PENDING"), completed: checkout.status === "COMPLETED" };
++  }
++  const expectedProductId = String(String(env.DODO_LIVE_LIFETIME_PRODUCT_ID || '').trim() || "").trim();
++  if (String(checkout.product_id || "") !== expectedProductId || !dodoPaymentHasProduct(data, expectedProductId)) {
++    throw new Error("Dodo Lifetime Story product verification failed.");
++  }
++  if (!paymentId) throw new Error("Dodo Lifetime Story payment is missing its payment ID.");
++  const existingByPayment = await env.DB.prepare("SELECT token FROM dodo_lifetime_checkout_sessions WHERE payment_id=? LIMIT 1").bind(paymentId).first().catch(() => null);
++  if (existingByPayment && String(existingByPayment.token) !== String(token)) {
++    throw new Error("This Dodo payment is already linked to another OX checkout.");
++  }
++  if (checkout.status === "COMPLETED") {
++    const purchase = await activeLifetimePurchase(env, user.id, checkout.permanent_story_id);
++    return { handled: true, userId: user.id, paymentId, status: "COMPLETED", completed: true, purchaseId: purchase?.id || null };
++  }
++  const existingOwnership = await activeLifetimePurchase(env, user.id, checkout.permanent_story_id);
++  const now = (/* @__PURE__ */ new Date()).toISOString();
++  if (existingOwnership) {
++    await env.DB.prepare(`UPDATE dodo_lifetime_checkout_sessions
++      SET status='DUPLICATE_COMPLETED',payment_id=?,completed_at=? WHERE token=?`).bind(paymentId, now, token).run().catch(() => null);
++    await createAdminNotification(env, {
++      type: "payment",
++      title: "Duplicate Dodo lifetime payment needs review",
++      body: `${user.name || user.email} \xB7 ${checkout.title_snapshot} \xB7 duplicate one-time payment`,
++      route: "lifetime",
++      userId: user.id,
++      relatedKey: `dodo-lifetime-duplicate:${paymentId}`
++    }).catch(() => null);
++    return { handled: true, userId: user.id, paymentId, status: "DUPLICATE_COMPLETED", completed: true, duplicate: true };
++  }
++  const purchaseId = crypto.randomUUID();
++  await env.DB.batch([
++    env.DB.prepare(`INSERT INTO story_lifetime_purchases(
++      id,user_id,user_name_snapshot,user_email_snapshot,permanent_story_id,original_story_id,original_title,
++      original_drive_url,original_drive_folder_id,original_cover,amount,currency,provider,environment,
++      paypal_order_id,paypal_capture_id,purchase_status,entitlement_status,purchased_at,updated_at
++    ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,NULL,NULL,'Completed','Active',?,?)`).bind(
++      purchaseId,
++      user.id,
++      user.name || "",
++      user.email || "",
++      checkout.permanent_story_id,
++      checkout.story_id_snapshot,
++      checkout.title_snapshot,
++      checkout.drive_url_snapshot,
++      checkout.drive_folder_id_snapshot,
++      checkout.cover_snapshot,
++      DODO_LIVE_LIFETIME_PRICE,
++      LIFETIME_STORY_CURRENCY,
++      "dodo",
++      "live_mode",
++      now,
++      now
++    ),
++    env.DB.prepare(`UPDATE dodo_lifetime_checkout_sessions
++      SET status='COMPLETED',payment_id=?,completed_at=? WHERE token=?`).bind(paymentId, now, token),
++    env.DB.prepare("INSERT INTO activity_log(type,title,detail,created_at) VALUES('payment','Dodo lifetime story purchase completed',?,?)").bind(`${user.email} \xB7 ${checkout.title_snapshot} \xB7 $${DODO_LIVE_LIFETIME_PRICE} \xB7 ${paymentId}.`, now)
++  ]);
++  await createAdminNotification(env, {
++    type: "payment",
++    title: "Lifetime story purchased",
++    body: `${user.name || user.email} \xB7 ${checkout.title_snapshot} \xB7 $${DODO_LIVE_LIFETIME_PRICE} \xB7 Dodo Live`,
++    route: "lifetime",
++    userId: user.id,
++    relatedKey: `dodo-lifetime:${paymentId}`
++  }).catch(() => null);
++  return {
++    handled: true,
++    userId: user.id,
++    paymentId,
++    status: "COMPLETED",
++    completed: true,
++    purchaseId,
++    storyId: checkout.story_id_snapshot,
++    permanentStoryId: checkout.permanent_story_id
++  };
++}
++__name(handleDodoLiveLifetimePaymentEvent, "handleDodoLiveLifetimePaymentEvent");
++
++async function oxClaimDodoLiveEvent(env, eventId) {
++  const now=Date.now();
++  const result=await env.DB.prepare(`INSERT OR IGNORE INTO dodo_live_webhook_receipts
++    (event_id,status,updated_ms) VALUES(?,'PROCESSING',?)`).bind(eventId,now).run();
++  if (result.meta?.changes > 0) return 'CLAIMED';
++  const old=await env.DB.prepare(`SELECT status,updated_ms FROM dodo_live_webhook_receipts
++    WHERE event_id=?`).bind(eventId).first();
++  if (old?.status==='PROCESSED') return 'PROCESSED';
++  if (old?.status==='FAILED' || (old?.status==='PROCESSING' && Number(old.updated_ms||0)<now-120000)) {
++    const claim=await env.DB.prepare(`UPDATE dodo_live_webhook_receipts SET status='PROCESSING',updated_ms=?
++      WHERE event_id=? AND status=? AND updated_ms=?`).bind(now,eventId,old.status,old.updated_ms).run();
++    if (claim.meta?.changes>0) return 'CLAIMED';
++  }
++  return 'BUSY';
++}
++__name(oxClaimDodoLiveEvent,'oxClaimDodoLiveEvent');
++async function handleDodoLiveWebhook(request, env) {
++  const rawBody = await request.text();
++  let verified = false;
++  try {
++    verified = await verifyDodoLiveWebhook(request, env, rawBody);
++  } catch (error) {
++    return json({ error: error.message || "Dodo webhook verification is not configured." }, 503);
++  }
++  if (!verified) return json({ error: "Invalid Dodo webhook signature." }, 401);
++  let event;
++  try {
++    event = JSON.parse(rawBody);
++  } catch {
++    return json({ error: "Invalid Dodo webhook JSON." }, 400);
++  }
++  if (env.DODO_LIVE_BUSINESS_ID && String(event?.business_id || '') !== String(env.DODO_LIVE_BUSINESS_ID)) return json({ error: 'Wrong Dodo business' }, 401);
++  const webhookId = String(request.headers.get("webhook-id") || "").trim();
++  const type = String(event?.type || "").trim();
++  const data = event?.data && typeof event.data === "object" ? event.data : {};
++  if (!webhookId || !type) return json({ error: "Incomplete Dodo webhook." }, 400);
++  const duplicate = await env.DB.prepare("SELECT id FROM payment_events WHERE provider_event_id=? LIMIT 1").bind(webhookId).first().catch(() => null);
++  if (duplicate) return json({ ok: true, duplicate: true });
++  const receipt=await oxClaimDodoLiveEvent(env,webhookId);
++  if (receipt==='PROCESSED') return json({ok:true,duplicate:true});
++  if (receipt==='BUSY') return json({error:'Webhook processing in progress'},503);
++  try {
++    const lifetimeResult = type.startsWith("payment.") ? await handleDodoLiveLifetimePaymentEvent(env, type, data) : { handled: false };
++    const owner = lifetimeResult.handled ? null : await resolveDodoLiveWebhookOwner(env, data);
++    const isSubscriptionEvent = type.startsWith("subscription.");
++    if (isSubscriptionEvent && !owner) throw new Error('Unmapped Dodo Live subscription');
++    let saved = null;
++    if (isSubscriptionEvent && owner) {
++      saved = await saveDodoLiveSubscription(env, owner, data, type);
++    }
++    const userId = lifetimeResult.userId || owner?.user_id || null;
++    const subscriptionId = String(data?.subscription_id || saved?.subscriptionId || "").trim() || null;
++    const currency = String(data?.currency || "").trim().toUpperCase();
++    const amount = dodoEventAmount(data);
++    const now = (/* @__PURE__ */ new Date()).toISOString();
++    const userSnapshot = userId ? await env.DB.prepare("SELECT name,email FROM users WHERE id=? LIMIT 1").bind(userId).first().catch(() => null) : null;
++    await env.DB.batch([
++      env.DB.prepare(`INSERT INTO payment_events(
++        provider,provider_event_id,event_type,user_id,provider_subscription_id,amount,currency,
++        environment,status,occurred_at,created_at,user_name_snapshot,user_email_snapshot
++      ) VALUES('dodo',?,?,?,?,?,?,'live_mode','Processed',?,?,?,?)`).bind(
++        webhookId,
++        type,
++        userId,
++        subscriptionId,
++        amount,
++        currency,
++        event?.timestamp || null,
++        now,
++        userSnapshot?.name || "",
++        userSnapshot?.email || ""
++      ),
++      env.DB.prepare("INSERT INTO activity_log(type,title,detail,created_at) VALUES('payment','Dodo live webhook processed',?,?)").bind(`${type}${subscriptionId ? ` \xB7 ${subscriptionId}` : ""}${saved?.status ? ` \xB7 ${saved.status}` : ""}.`, now)
++    ]);
++    await env.DB.prepare(`UPDATE dodo_live_webhook_receipts SET status='PROCESSED',updated_ms=? WHERE event_id=?`)
++      .bind(Date.now(),webhookId).run();
++    return json({
++      ok: true,
++      event: type,
++      mapped: Boolean(owner || lifetimeResult.handled),
++      activated: saved?.status === "ACTIVE",
++      lifetimeCompleted: Boolean(lifetimeResult.completed),
++      status: lifetimeResult.status || saved?.status || null
++    });
++  } catch (error) {
++    await env.DB.prepare(`UPDATE dodo_live_webhook_receipts SET status='FAILED',updated_ms=?
++      WHERE event_id=? AND status='PROCESSING'`).bind(Date.now(),webhookId).run().catch(()=>null);
++    console.error("Dodo live webhook processing failed", error);
++    return json({ error: error.message || "Unable to process Dodo live webhook." }, 500);
++  }
++}
++__name(handleDodoLiveWebhook, "handleDodoLiveWebhook");
+ function paypalApiBase(mode = "sandbox") {
+   return String(mode).toLowerCase() === "live" ? "https://api-m.paypal.com" : "https://api-m.sandbox.paypal.com";
+ }
+@@ -6174,6 +6781,7 @@
+ }
+ __name(fetchPaypalSubscription, "fetchPaypalSubscription");
+ async function savePaypalSubscription(env, userId, tierId, details, { paymentCompleted = false, environment = "" } = {}) {
++  const oxPreviousProviderGrant=await env.DB.prepare(`SELECT membership_status,membership_plan,membership_tier_id,membership_expires_at FROM users WHERE id=?`).bind(userId).first();
+   const now = (/* @__PURE__ */ new Date()).toISOString();
+   const subscriptionId = String(details.id || "");
+   const planId = String(details.plan_id || "");
+@@ -6217,6 +6825,8 @@
+   if (paidOnceEnvironmentEligible(environment) && (lastPaymentAt || ["ACTIVE", "CANCELLED", "EXPIRED", "SUSPENDED"].includes(status))) {
+     await markUserPaidOnce(env, userId, lastPaymentAt || startedAt || now, environment);
+   }
++  await oxReconcilePaidProviders(env,userId,oxPreviousProviderGrant).catch((error)=>
++    console.warn('Dual-provider reconciliation unavailable; original PayPal update preserved', error));
+   return { status, nextBilling, lastPaymentAt };
+ }
+ __name(savePaypalSubscription, "savePaypalSubscription");
+@@ -6983,9 +7593,33 @@
+     if (pathname === "/api/story-purchases/mine" && request.method === "GET") return handleLifetimeStoryMine(request, env);
+     if (pathname === "/api/story-purchases/create-order" && request.method === "POST") return handleLifetimeStoryCreateOrder(request, env);
+     if (pathname === "/api/story-purchases/capture-order" && request.method === "POST") return handleLifetimeStoryCaptureOrder(request, env);
+-    if (pathname === "/api/story-purchases/dodo-test-checkout" && request.method === "POST") return handleDodoLifetimeTestCheckout(request, env, url);
+-    if (pathname === "/api/payments/dodo/test-checkout" && request.method === "POST") return handleDodoTestCheckout(request, env, url);
+-    if (pathname === "/api/payments/dodo/test-webhook" && request.method === "POST") return handleDodoTestWebhook(request, env);
++    if (pathname === "/api/story-purchases/dodo-test-checkout" && request.method === "POST") {
++      if (String(env.OX_ENABLE_DODO_SANDBOX || '') !== '1') return json({ error: 'Not found' }, 404);
++      if (!await isAdminAuthenticated(request,env)) return json({ error: "Admin only" },403);
++      return handleDodoLifetimeTestCheckout(request, env, url);
++    }
++    if (pathname === "/api/payments/dodo/test-checkout" && request.method === "POST") {
++      if (String(env.OX_ENABLE_DODO_SANDBOX || '') !== '1') return json({ error: 'Not found' }, 404);
++      if (!await isAdminAuthenticated(request,env)) return json({ error: "Admin only" },403);
++      return handleDodoTestCheckout(request, env, url);
++    }
++    if (pathname === "/api/payments/dodo/test-webhook" && request.method === "POST") {
++      if (String(env.OX_ENABLE_DODO_SANDBOX || '') !== '1') return json({ error: 'Not found' }, 404);
++      
++      return handleDodoTestWebhook(request, env);
++    }
++    if (pathname === '/api/payments/dodo/live-checkout' && request.method === 'POST') {
++      if (!dodoLiveEnabled(env)) return json({ error: 'Live checkout not enabled' }, 503);
++      return handleDodoLiveCheckout(request,env,url);
++    }
++    if (pathname === '/api/story-purchases/dodo-live-checkout' && request.method === 'POST') {
++      if (!dodoLiveEnabled(env)) return json({ error: 'Live checkout not enabled' }, 503);
++      return handleDodoLifetimeLiveCheckout(request,env,url);
++    }
++    if (pathname === '/api/payments/dodo/live-webhook' && request.method === 'POST') {
++      if (!dodoLiveWebhookReady(env)) return json({ error: 'Live webhook secret not configured' }, 503);
++      return handleDodoLiveWebhook(request,env);
++    }
+     if (pathname === "/api/payments/paypal/checkout-context" && request.method === "POST") return handlePaypalCheckoutContext(request, env);
+     if (pathname === "/api/payments/paypal/confirm" && request.method === "POST") return handlePaypalConfirm(request, env);
+     if (pathname === "/api/payments/paypal/refresh-status" && request.method === "POST") return handlePaypalRefreshStatus(request, env);

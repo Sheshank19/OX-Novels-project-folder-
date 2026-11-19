@@ -1,0 +1,11 @@
+import fs from 'node:fs';import path from 'node:path';
+const root=path.resolve(import.meta.dirname,'..','..'), file=path.join(root,'local-player-b5','wrangler.jsonc');
+const id=String(process.argv[2]||'');if(!/^[a-f0-9]{32}$/.test(id))throw new Error('Cloudflare KV ID must be 32 lowercase hex characters.');
+const config=JSON.parse(fs.readFileSync(file,'utf8'));
+if(config.name!=='listen'||config.account_id!=='3440ce4434b656cf94f6a5cf70470afd')throw new Error('Unexpected Player Worker/account configuration.');
+config.kv_namespaces=[{binding:'B9_CATALOG_KV',id}];
+config.queues={producers:[{binding:'B9_SCAN_QUEUE',queue:'ox-player-b9-scans'}],consumers:[{queue:'ox-player-b9-scans',max_batch_size:1,max_concurrency:12,max_retries:14}]};
+config.triggers={crons:['0 7 * * *','0 8 * * *']};
+config.vars={...(config.vars||{}),B9_SCANNER_ENABLED:'false',B9_OX_LIBRARY_URL:'https://oxnovels.top/api/internal/player-library'};
+const backup=file+'.before-b9.2';if(!fs.existsSync(backup))fs.copyFileSync(file,backup);
+fs.writeFileSync(file,JSON.stringify(config,null,2)+'\n');console.log('Prepared local Player config: KV, Queue concurrency 12, retry up to 15, Pacific DST-aware Cron.');

@@ -1,0 +1,5 @@
+import fs from 'node:fs';import path from 'node:path';import { b5Root, oxRoot } from './common.mjs';
+const dst=path.join(b5Root,'wrangler.jsonc'), src=path.join(oxRoot,'local-player-b4','wrangler.jsonc');
+if(!fs.existsSync(src)) throw new Error('local-player-b4/wrangler.jsonc not found. Keep your working B4 folder.');
+const old=fs.readFileSync(src,'utf8'); const m=old.match(/"account_id"\s*:\s*"([^"]+)"/);
+let out=fs.readFileSync(dst,'utf8'); if(m){ if(/"account_id"\s*:/.test(out))out=out.replace(/"account_id"\s*:\s*"[^"]+"/,`"account_id": "${m[1]}"`); else out=out.replace(/"name"\s*:\s*"listen"\s*,/,`"name": "listen",\n  "account_id": "${m[1]}",`); fs.writeFileSync(dst,out); console.log('Imported the configured OX Audio Player account target from local-player-b4.'); } else console.log('No account_id was found in local-player-b4/wrangler.jsonc. Run SET-PLAYER-ACCOUNT-ID in B4 first or add it to B5.');

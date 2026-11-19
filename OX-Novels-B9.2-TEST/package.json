@@ -1,0 +1,15 @@
+{
+  "name": "ox-novels",
+  "version": "3.0.0",
+  "private": true,
+  "description": "OX Novels - cloneable Cloudflare Workers + D1 audio-story membership site",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:local": "wrangler d1 migrations apply ox-novels-db --local",
+    "db:remote": "wrangler d1 migrations apply ox-novels-db --remote"
+  },
+  "devDependencies": {
+    "wrangler": "^4.123.0"
+  }
+}

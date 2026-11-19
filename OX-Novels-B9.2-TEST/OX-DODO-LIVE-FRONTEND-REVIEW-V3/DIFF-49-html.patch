@@ -1,0 +1,20 @@
+--- CURRENT-LIVE/49.html
++++ REVIEW-ONLY/49.html
+@@ -4,7 +4,7 @@
+   <meta charset="utf-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+   <meta name="theme-color" content="#ffffff">
+-  <meta name="description" content="Select one OX Novels story and unlock lifetime access for $49 one-time.">
++  <meta name="description" content="Select one OX Novels story and unlock lifetime access for $65 one-time.">
+   <title>Select a Story — Lifetime Access</title>
+   <link rel="stylesheet" href="/assets/styles.css">
+   <link rel="stylesheet" href="/assets/lifetime.css">
+@@ -100,7 +100,7 @@
+           <span class="lifetime-entry-copy">
+             <small>LIFETIME STORY ACCESS</small>
+             <strong>Want only one story?</strong>
+-            <span>Choose any story and keep access for <b>$49 one-time</b>.</span>
++            <span>Choose any story and keep access for <b>$65 one-time</b>.</span>
+           </span>
+           <span class="lifetime-entry-action">Choose Story <b aria-hidden="true">→</b></span>
+         </a>

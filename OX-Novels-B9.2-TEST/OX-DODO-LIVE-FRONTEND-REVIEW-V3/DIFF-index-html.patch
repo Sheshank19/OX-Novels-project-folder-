@@ -1,0 +1,11 @@
+--- CURRENT-LIVE/index.html
++++ REVIEW-ONLY/index.html
+@@ -131,7 +131,7 @@
+           <span class="lifetime-entry-copy">
+             <small>LIFETIME STORY ACCESS</small>
+             <strong>Want only one story?</strong>
+-            <span>Choose any story and keep access for <b>$49 one-time</b>.</span>
++            <span>Choose any story and keep access for <b>$65 one-time</b>.</span>
+           </span>
+           <span class="lifetime-entry-action">Choose Story <b aria-hidden="true">→</b></span>
+         </a>

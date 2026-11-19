@@ -1,0 +1,5 @@
+ALTER TABLE stories ADD COLUMN drive_root_id TEXT NOT NULL DEFAULT '';
+ALTER TABLE stories ADD COLUMN drive_root_url TEXT NOT NULL DEFAULT '';
+ALTER TABLE stories ADD COLUMN drive_root_name TEXT NOT NULL DEFAULT '';
+ALTER TABLE stories ADD COLUMN drive_root_owner_email TEXT NOT NULL DEFAULT '';
+ALTER TABLE stories ADD COLUMN drive_path TEXT NOT NULL DEFAULT '';

@@ -1,0 +1,11 @@
+{
+  "generatedAt": "2026-10-03T00:00:00.000Z",
+  "stories": [
+    {
+      "id": "example-story",
+      "title": "Example Story",
+      "drive_url": "https://drive.google.com/drive/folders/EXAMPLE_FOLDER_ID",
+      "visible": 1
+    }
+  ]
+}

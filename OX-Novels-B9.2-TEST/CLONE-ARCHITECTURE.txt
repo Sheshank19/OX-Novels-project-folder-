@@ -1,0 +1,40 @@
+INDEPENDENT COPY ARCHITECTURE
+=============================
+
+Each owner receives a separate copy of the same finished site engine. It is NOT a
+multi-tenant/shared website.
+
+Each deployed copy has its OWN:
+- Cloudflare account/project
+- Worker and D1 database
+- Admin password/session
+- website name and branding
+- Google OAuth 2.0 Web Client ID
+- stories and private Drive links
+- Google Drive / Apps Script configuration
+- membership tiers
+- users
+- chats
+- notifications
+- PayPal credentials, plans and webhook
+- finance/payment records
+- domain
+- backups
+
+No owner's database, Google OAuth client, PayPal/Drive secret, users or payment data
+is shared with another owner's copy.
+
+CLEAN CLONE GENERATOR
+---------------------
+Run MAKE-CLEAN-CLONE.bat from the finished project folder.
+
+The generated clean ZIP contains code + migrations + setup instructions, but excludes:
+- .dev.vars and .wrangler/local D1
+- node_modules, logs, databases and existing ZIPs
+- users, chats, payment history and sessions
+- owner branding and old demonstration cover assets
+- the source owner's Cloudflare D1 UUID and preview routing
+
+The new copy begins with generic "Your Site" branding, zero seeded stories, zero
+membership tiers, no Google client ID and no owner secrets. The new owner configures
+all of those through their own setup/Admin flow.

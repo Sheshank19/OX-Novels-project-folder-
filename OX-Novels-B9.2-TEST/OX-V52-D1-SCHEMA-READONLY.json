@@ -1,0 +1,48 @@
+﻿[
+  {
+    "results": [
+      {
+        "name": "dodo_lifetime_checkout_sessions",
+        "sql": "CREATE TABLE dodo_lifetime_checkout_sessions (\n  token TEXT PRIMARY KEY,\n  checkout_session_id TEXT UNIQUE,\n  checkout_url TEXT NOT NULL DEFAULT '',\n  payment_id TEXT UNIQUE,\n  user_id TEXT NOT NULL,\n  permanent_story_id TEXT NOT NULL,\n  story_id_snapshot TEXT NOT NULL DEFAULT '',\n  title_snapshot TEXT NOT NULL DEFAULT '',\n  drive_url_snapshot TEXT NOT NULL DEFAULT '',\n  drive_folder_id_snapshot TEXT NOT NULL DEFAULT '',\n  cover_snapshot TEXT NOT NULL DEFAULT '',\n  product_id TEXT NOT NULL,\n  amount TEXT NOT NULL DEFAULT '49.00',\n  currency TEXT NOT NULL DEFAULT 'USD',\n  environment TEXT NOT NULL DEFAULT 'test_mode',\n  status TEXT NOT NULL DEFAULT 'INIT',\n  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  expires_at TEXT NOT NULL,\n  completed_at TEXT,\n  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,\n  FOREIGN KEY (permanent_story_id) REFERENCES lifetime_story_products(id) ON DELETE CASCADE\n)"
+      },
+      {
+        "name": "dodo_live_membership_control",
+        "sql": "CREATE TABLE dodo_live_membership_control (   user_id TEXT PRIMARY KEY,   created_at TEXT NOT NULL )"
+      },
+      {
+        "name": "dodo_live_webhook_receipts",
+        "sql": "CREATE TABLE dodo_live_webhook_receipts (   event_id TEXT PRIMARY KEY,   status TEXT NOT NULL     CHECK(status IN ('PROCESSING','PROCESSED','FAILED')),   updated_ms INTEGER NOT NULL )"
+      },
+      {
+        "name": "lifetime_story_checkout_sessions",
+        "sql": "CREATE TABLE lifetime_story_checkout_sessions (\n  token TEXT PRIMARY KEY,\n  paypal_order_id TEXT UNIQUE,\n  paypal_approve_url TEXT NOT NULL DEFAULT '',\n  user_id TEXT NOT NULL,\n  permanent_story_id TEXT NOT NULL,\n  story_id_snapshot TEXT NOT NULL DEFAULT '',\n  title_snapshot TEXT NOT NULL DEFAULT '',\n  drive_url_snapshot TEXT NOT NULL DEFAULT '',\n  drive_folder_id_snapshot TEXT NOT NULL DEFAULT '',\n  cover_snapshot TEXT NOT NULL DEFAULT '',\n  amount TEXT NOT NULL DEFAULT '49.00',\n  currency TEXT NOT NULL DEFAULT 'USD',\n  environment TEXT NOT NULL DEFAULT '',\n  status TEXT NOT NULL DEFAULT 'INIT',\n  paypal_capture_id TEXT,\n  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  expires_at TEXT NOT NULL,\n  completed_at TEXT,\n  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,\n  FOREIGN KEY (permanent_story_id) REFERENCES lifetime_story_products(id) ON DELETE CASCADE,\n  UNIQUE (paypal_capture_id)\n)"
+      },
+      {
+        "name": "payment_checkout_sessions",
+        "sql": "CREATE TABLE payment_checkout_sessions (\n  token TEXT PRIMARY KEY,\n  user_id TEXT NOT NULL,\n  tier_id TEXT NOT NULL,\n  provider TEXT NOT NULL,\n  external_plan_id TEXT NOT NULL,\n  created_at TEXT NOT NULL,\n  expires_at TEXT NOT NULL,\n  used_at TEXT, environment TEXT NOT NULL DEFAULT '',\n  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,\n  FOREIGN KEY (tier_id) REFERENCES membership_tiers(id) ON DELETE CASCADE\n)"
+      },
+      {
+        "name": "support_checkout_sessions",
+        "sql": "CREATE TABLE support_checkout_sessions (\n  token TEXT PRIMARY KEY,\n  provider_order_id TEXT NOT NULL UNIQUE,\n  user_id TEXT NOT NULL,\n  amount TEXT NOT NULL,\n  currency TEXT NOT NULL DEFAULT 'USD',\n  environment TEXT NOT NULL DEFAULT 'sandbox',\n  status TEXT NOT NULL DEFAULT 'CREATED',\n  created_at TEXT NOT NULL,\n  expires_at TEXT NOT NULL,\n  completed_at TEXT,\n  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE\n)"
+      }
+    ],
+    "success": true,
+    "meta": {
+      "served_by": "v3-prod",
+      "served_by_region": "APAC",
+      "served_by_colo": "ICN",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.5211
+      },
+      "duration": 0.5211,
+      "changes": 0,
+      "last_row_id": 0,
+      "changed_db": false,
+      "size_after": 11509760,
+      "rows_read": 135,
+      "rows_written": 0,
+      "total_attempts": 1
+    }
+  }
+]

@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OX Player Catalog Manager</title>
+<style>
+:root{color-scheme:dark;--bg:#071312;--card:#0d1d1b;--line:#203431;--text:#ecfffb;--muted:#99b4ae;--accent:#22d3bd;--ok:#52d18c;--warn:#f4c45e;--bad:#ff7676}
+*{box-sizing:border-box}body{margin:0;font:14px/1.45 Inter,system-ui,Segoe UI,Arial;background:var(--bg);color:var(--text)}
+.wrap{max-width:1420px;margin:auto;padding:24px}.top{display:flex;gap:16px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap}
+h1{margin:0;font-size:28px}h2{margin:0 0 12px;font-size:18px}.muted{color:var(--muted)}.pill{border:1px solid var(--line);padding:5px 9px;border-radius:999px;color:var(--muted)}
+.actions{display:flex;gap:8px;flex-wrap:wrap}button,a.btn{border:1px solid var(--line);background:#122724;color:var(--text);padding:9px 12px;border-radius:9px;cursor:pointer;text-decoration:none;font-weight:650}
+button:hover,a.btn:hover{border-color:var(--accent)}button.primary{background:var(--accent);color:#03211d;border-color:var(--accent)}button.danger{color:#ffdada;border-color:#6a3434;background:#271313}button:disabled{opacity:.45;cursor:not-allowed}
+.cards{display:grid;grid-template-columns:repeat(6,minmax(130px,1fr));gap:10px;margin:18px 0}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}.card strong{font-size:25px;display:block}.card span{color:var(--muted)}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:14px}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}input,select{background:#071714;color:var(--text);border:1px solid var(--line);border-radius:9px;padding:9px 10px}input{min-width:280px}
+.tablewrap{overflow:auto;max-height:62vh;border:1px solid var(--line);border-radius:10px}table{width:100%;border-collapse:collapse;min-width:960px}th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}th{position:sticky;top:0;background:#102420;z-index:1;font-size:12px;color:#b8d3cd}
+.status{font-weight:800;font-size:11px;padding:4px 7px;border-radius:999px;white-space:nowrap}.ok{background:#123722;color:#8ef3b7}.warn{background:#3d3212;color:#ffda76}.bad{background:#401a1a;color:#ffaaaa}.neutral{background:#1d2c2a;color:#b7cac6}
+.rowactions{display:flex;gap:6px;flex-wrap:wrap}.rowactions button,.rowactions a{font-size:12px;padding:6px 8px}
+.jobhead{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}.bar{height:9px;background:#071714;border-radius:999px;overflow:hidden;margin:10px 0}.bar i{display:block;height:100%;background:var(--accent);width:0}
+pre{margin:0;background:#06100f;border:1px solid var(--line);border-radius:10px;padding:12px;max-height:300px;overflow:auto;white-space:pre-wrap;color:#cfe5df}
+.toast{position:fixed;right:18px;bottom:18px;max-width:420px;background:#132825;border:1px solid var(--line);padding:12px 14px;border-radius:12px;display:none;z-index:10}
+.note{border-left:3px solid var(--accent);padding:9px 12px;background:#0a1816;color:#c7ddd8}
+@media(max-width:900px){.cards{grid-template-columns:repeat(2,1fr)}.wrap{padding:14px}input{min-width:180px;width:100%}.toolbar>*{flex:1 1 auto}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <div class="pill">LOCAL ONLY · B8.1</div>
+      <h1>OX Player Catalog Manager</h1>
+      <div class="muted">Catalog lifecycle, automatic retries and reconciliation without exposing Player credentials to oxnovels.top.</div>
+    </div>
+    <div class="actions">
+      <button id="refresh">Refresh status</button>
+      <button class="primary" id="prepareAll">Prepare Missing / Changed</button>
+      <button id="cancelJob">Stop after current story</button>
+    </div>
+  </div>
+
+  <div class="cards">
+    <div class="card"><strong id="currentStories">—</strong><span>OX stories</span></div>
+    <div class="card"><strong id="published">—</strong><span>Published</span></div>
+    <div class="card"><strong id="current">—</strong><span>Current</span></div>
+    <div class="card"><strong id="prepared">—</strong><span>Prepared</span></div>
+    <div class="card"><strong id="missing">—</strong><span>Missing / changed</span></div>
+    <div class="card"><strong id="orphans">—</strong><span>Orphaned</span></div>
+  </div>
+
+  <section class="panel">
+    <div class="jobhead">
+      <div><h2>Current job</h2><div class="muted" id="jobSummary">No job running.</div></div>
+      <div class="pill" id="jobType">IDLE</div>
+    </div>
+    <div class="bar"><i id="jobBar"></i></div>
+    <pre id="jobLogs">No job logs yet.</pre>
+  </section>
+
+  <section class="panel">
+    <h2>Player publication</h2>
+    <div class="note">B8.1 intentionally keeps Cloudflare publication manual. After catalogs are prepared/current, run <b>local-player-b6\BUILD-AND-DEPLOY-CURRENT-PLAYER.bat</b>. This avoids putting Player-account credentials inside the main OX Admin.</div>
+  </section>
+
+  <section class="panel">
+    <div class="toolbar">
+      <input id="search" placeholder="Search title or story ID">
+      <select id="filter">
+        <option value="">All statuses</option>
+        <option>PUBLISHED_CURRENT</option>
+        <option>PREPARED_NOT_PUBLISHED</option>
+        <option>MISSING_CATALOG</option>
+        <option>SOURCE_CHANGED</option>
+        <option>NO_DRIVE_SOURCE</option>
+        <option>ORPHANED_PUBLISHED</option>
+        <option>HIDDEN</option>
+      </select>
+      <span class="muted" id="rowCount"></span>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Story</th><th>Status</th><th>Tracks</th><th>Generation</th><th>Actions</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const $=s=>document.querySelector(s);
+let state=null, job=null;
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+async function api(url,opt={}){const r=await fetch(url,{cache:'no-store',headers:{'content-type':'application/json'},...opt});const p=await r.json().catch(()=>({}));if(!r.ok)throw new Error(p.error||`Request failed (${r.status})`);return p}
+function toast(s){const t=$('#toast');t.textContent=s;t.style.display='block';clearTimeout(t._x);t._x=setTimeout(()=>t.style.display='none',4500)}
+function klass(s){if(s==='PUBLISHED_CURRENT')return'ok';if(s==='PREPARED_NOT_PUBLISHED'||s==='SOURCE_CHANGED')return'warn';if(s==='MISSING_CATALOG'||s==='NO_DRIVE_SOURCE'||s==='ORPHANED_PUBLISHED')return'bad';return'neutral'}
+function renderState(){
+  if(!state)return;
+  const c=state.counts||{};
+  $('#currentStories').textContent=state.currentStories;
+  $('#published').textContent=state.publishedCatalogs;
+  $('#current').textContent=c.PUBLISHED_CURRENT||0;
+  $('#prepared').textContent=c.PREPARED_NOT_PUBLISHED||0;
+  $('#missing').textContent=(c.MISSING_CATALOG||0)+(c.SOURCE_CHANGED||0);
+  $('#orphans').textContent=c.ORPHANED_PUBLISHED||0;
+  const q=$('#search').value.trim().toLowerCase(),f=$('#filter').value;
+  const rows=state.rows.filter(r=>(!f||r.status===f)&&(!q||(r.storyId+' '+r.title).toLowerCase().includes(q)));
+  $('#rowCount').textContent=`${rows.length} row(s)`;
+  $('#rows').innerHTML=rows.map(r=>{
+    const canPrepare=['MISSING_CATALOG','SOURCE_CHANGED','PREPARED_NOT_PUBLISHED'].includes(r.status);
+    const orphan=r.status==='ORPHANED_PUBLISHED';
+    return `<tr>
+      <td><b>${esc(r.title||r.storyId)}</b><div class="muted">${esc(r.storyId)}</div></td>
+      <td><span class="status ${klass(r.status)}">${esc(r.status)}</span></td>
+      <td>${Number(r.trackCount||0).toLocaleString()}</td>
+      <td class="muted">${esc(r.generation||'—')}</td>
+      <td><div class="rowactions">
+        ${canPrepare?`<button onclick="prepareOne('${encodeURIComponent(r.storyId)}')">${r.status==='PREPARED_NOT_PUBLISHED'?'Refresh':'Prepare / Refresh'}</button>`:''}
+        ${!orphan&&r.folderId?`<button onclick="checkDrive('${encodeURIComponent(r.storyId)}')">Check Drive</button>`:''}
+        ${!orphan?`<a class="btn" target="_blank" rel="noopener" href="https://listen.ox-audio-player.workers.dev/listen/${encodeURIComponent(r.storyId)}">Open Player</a>`:''}
+        ${orphan?`<button class="danger" onclick="removeOrphan('${encodeURIComponent(r.storyId)}')">Remove orphan</button>`:''}
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+function renderJob(){
+  if(!job)return;
+  $('#jobType').textContent=job.active?String(job.type||'JOB').toUpperCase():'IDLE';
+  const total=Number(job.total||0),done=Number(job.completed||0);
+  const pct=total?Math.min(100,Math.round(done/total*100)):0;
+  $('#jobBar').style.width=pct+'%';
+  $('#jobSummary').textContent=job.active
+    ? `${done}/${total} · ${job.succeeded||0} succeeded · ${job.failed||0} failed${job.currentTitle?' · '+job.currentTitle:''}`
+    : (job.finishedAt?`Finished · ${job.succeeded||0} succeeded · ${job.failed||0} failed`:'No job running.');
+  $('#jobLogs').textContent=(job.logs||[]).join('\n')||'No job logs yet.';
+  $('#jobLogs').scrollTop=$('#jobLogs').scrollHeight;
+  $('#prepareAll').disabled=!!job.active;
+}
+async function refresh(){try{state=await api('/api/state');renderState()}catch(e){toast(e.message)}}
+async function refreshJob(){try{const old=job?.active;job=await api('/api/job');renderJob();if(old&&!job.active)await refresh()}catch{}}
+window.prepareOne=async raw=>{const id=decodeURIComponent(raw);if(!confirm(`Prepare/refresh catalog for ${id}?\\n\\nB8 will retry temporary failures automatically up to 3 times.`))return;try{await api('/api/prepare-one',{method:'POST',body:JSON.stringify({storyId:id})});await refreshJob()}catch(e){toast(e.message)}}
+window.checkDrive=async raw=>{const id=decodeURIComponent(raw);try{toast(`Checking Drive for ${id}...`);const r=await api('/api/check-drive',{method:'POST',body:JSON.stringify({storyId:id})});toast(r.ok?`Drive accessible: ${r.rootFolders} root folders, ${r.rootTracks} root tracks`:(r.error||'Drive check failed'))}catch(e){toast(e.message)}}
+window.removeOrphan=async raw=>{const id=decodeURIComponent(raw);if(!confirm(`Remove orphaned Player catalog "${id}" from LOCAL publication state?\\n\\nYou still need to run the B6 build/deploy BAT to publish the removal.`))return;try{await api('/api/remove-orphan',{method:'POST',body:JSON.stringify({storyId:id,confirmation:`REMOVE ${id}`})});toast('Orphan removed locally.');await refresh()}catch(e){toast(e.message)}}
+$('#refresh').onclick=refresh;
+$('#search').oninput=renderState;$('#filter').onchange=renderState;
+$('#prepareAll').onclick=async()=>{if(!confirm('Prepare every missing or source-changed catalog?\\n\\nStories run sequentially. Each failed story gets up to 3 attempts with 2s / 5s backoff.'))return;try{await api('/api/prepare-all',{method:'POST',body:'{}'});await refreshJob()}catch(e){toast(e.message)}}
+$('#cancelJob').onclick=async()=>{try{await api('/api/cancel',{method:'POST',body:'{}'});toast('B8 will stop before starting the next story.')}catch(e){toast(e.message)}}
+const requestedStory=new URLSearchParams(location.search).get('story');if(requestedStory){$('#search').value=requestedStory;}
+refresh();refreshJob();setInterval(refreshJob,1500);setInterval(()=>{if(!job?.active)refresh()},15000);
+</script>
+</body>
+</html>

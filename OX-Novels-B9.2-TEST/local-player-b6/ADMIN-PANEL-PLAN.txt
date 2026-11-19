@@ -1,0 +1,23 @@
+Future OX Admin section: PLAYER CATALOGS
+
+Recommended cards/statuses:
+- Current OX stories
+- Published Player catalogs
+- Ready/current
+- Missing catalog
+- Source changed
+- Drive inaccessible
+- Orphaned published catalog
+
+Recommended actions:
+- Prepare / Refresh one story
+- Prepare missing stories in a controlled batch
+- Reconcile current OX vs Player
+- Remove orphaned catalogs (confirmation required)
+- Drive access audit
+- View last sync / generation / folder count / track count
+
+Why this is not wired as a one-click production admin action yet:
+The Player catalogs are immutable Worker Static Assets in a separate Cloudflare account. Updating them requires a deployment to Account B. A browser/admin page should not be given a broad Cloudflare API token casually. The current local publisher is the safer control plane while the Player architecture is still being finalized.
+
+Final one-click admin publishing can be added later with a narrowly scoped Account-B Workers deployment token stored only as a server-side secret, after the catalog lifecycle is fully stable.

@@ -1,0 +1,63 @@
+OX NOVELS v11 - FIRST BACKEND STEP
+===================================
+
+THIS VERSION CONNECTS THE FIRST REAL BACKEND FEATURES:
+
+- Cloudflare D1 database
+- Admin password/session
+- Appearance -> public website
+- Site Settings -> public behavior (first settings)
+- Story Library -> public Stories page
+- Published Membership Tiers -> public Membership page
+
+Users, real member accounts, real chat, payments, Drive scanning, uploads/storage,
+finance and automatic source checking are NOT connected yet. They come next.
+
+LOCAL TEST - EASIEST METHOD
+---------------------------
+1. Extract this ZIP.
+2. Double-click:
+
+   INIT-LOCAL-BACKEND.bat
+
+3. The first time, choose a local Admin password.
+4. Wrangler creates the local D1 tables from migrations/0001_initial.sql.
+5. Keep the command window open.
+6. Open:
+
+   http://localhost:8787/admin.html
+
+7. Enter the Admin password you selected.
+8. Change Appearance, a story, or a Membership Tier.
+9. Open/refresh:
+
+   http://localhost:8787/
+
+The public site should now use the saved D1 data.
+
+IMPORTANT
+---------
+The database used by local testing lives in the project's .wrangler folder.
+It is separate from a future production Cloudflare D1 database.
+
+The local Admin password is stored only in .dev.vars.
+.dev.vars is intentionally ignored by Git and must never be included when
+sharing a configured personal copy with someone else.
+
+REMOTE / CLOUDFLARE DEPLOYMENT
+------------------------------
+We will do production setup after this local backend foundation is approved.
+For production each owner will create:
+
+- their own Cloudflare account
+- their own Worker
+- their own D1 database
+- their own ADMIN_PASSWORD secret
+- their own domain if wanted
+
+This is deliberately NOT a multi-tenant platform.
+
+V11.1 IMPORTANT:
+Do not merge this backend package into an older frontend folder for the first backend test.
+Use this extracted OX-Novels folder as a clean project folder.
+Before starting, stop any other Wrangler dev server using port 8787.

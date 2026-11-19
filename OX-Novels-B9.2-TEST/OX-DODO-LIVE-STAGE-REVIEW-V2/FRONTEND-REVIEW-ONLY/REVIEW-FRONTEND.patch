@@ -1,0 +1,270 @@
+--- uploaded-project/public/assets/app.js
++++ frontend-review/app.js
+@@ -1494,7 +1494,7 @@
+       els.dialogAction.disabled = false;
+       if (story.purchasable !== false) {
+         configureDialogSecondaryAction({
+-          text: "Purchase This Single Story — $49",
++          text: "Purchase This Single Story — $65",
+           note: "One-time payment. Keep this story even if your membership ends.",
+           action: "purchase-lifetime"
+         });
+@@ -1511,8 +1511,8 @@
+       });
+     } else {
+       els.dialogStatus.classList.add("active");
+-      els.dialogStatusText.textContent = "$49 one-time · permanent access to this story";
+-      els.dialogAction.textContent = "Purchase This Single Story — $49";
++      els.dialogStatusText.textContent = "$65 one-time · permanent access to this story";
++      els.dialogAction.textContent = "Purchase This Single Story — $65";
+       els.dialogAction.disabled = false;
+       setDialogActionNote(els.dialogActionNote, "Pay once and keep permanent access to this story.");
+       configureDialogSecondaryAction({
+@@ -1532,7 +1532,7 @@
+     els.dialogAction.textContent = "Play Story";
+     els.dialogAction.disabled = false;
+     configureDialogSecondaryAction({
+-      text: "Purchase This Single Story — $49",
++      text: "Purchase This Single Story — $65",
+       note: "One-time payment. Keep this story even if your membership ends.",
+       action: "purchase-lifetime"
+     });
+@@ -1544,7 +1544,7 @@
+     setDialogActionNote(els.dialogActionNote, "Unlock every available story while your membership is active.");
+     if (story.purchasable !== false) {
+       configureDialogSecondaryAction({
+-        text: "Purchase This Single Story — $49",
++        text: "Purchase This Single Story — $65",
+         note: "One-time payment. Keep permanent access to this story.",
+         action: "purchase-lifetime"
+       });
+@@ -2920,12 +2920,56 @@
+   }
+ }
+ 
++async function beginDodoLifetimeLiveStoryPayment(story, actionButton) {
++  const originalText = actionButton.textContent;
++  const startedAt = Date.now();
++  let leavingForDodo = false;
++  actionButton.disabled = true;
++  const countdown = startButtonCountdown(actionButton, "Preparing secure Dodo live checkout…", 10);
++  try {
++    const response = await fetch("/api/story-purchases/dodo-live-checkout", {
++      method: "POST",
++      credentials: "same-origin",
++      headers: { "content-type": "application/json" },
++      body: JSON.stringify({ storyId: story.id })
++    });
++    const payload = await response.json().catch(() => ({}));
++    if (!response.ok) {
++      if (payload.code === "LOGIN_REQUIRED") { openGoogleLogin(); return; }
++      throw new Error(payload.error || "Unable to start Dodo Lifetime Story live checkout.");
++    }
++    if (payload.alreadyPurchased) {
++      story.lifetimePurchased = true;
++      renderAccessStatus();
++      openStoryDialog(story);
++      showToast("Already Purchased ✓");
++      return;
++    }
++    if (!payload.checkoutUrl) throw new Error("Dodo checkout link was not returned.");
++
++    const remainingDelay = 1600 - (Date.now() - startedAt);
++    if (remainingDelay > 0) await wait(remainingDelay);
++    leavingForDodo = true;
++    location.assign(payload.checkoutUrl);
++  } catch (error) {
++    showToast(error.message || "Unable to start Dodo Lifetime Story live checkout.");
++  } finally {
++    countdown.stop();
++    if (!leavingForDodo) {
++      actionButton.disabled = false;
++      actionButton.textContent = originalText;
++    }
++  }
++}
++
+ async function beginLifetimeStoryPayment(story = state.selectedStory, actionButton = els.dialogAction) {
+   if (!story || !actionButton) return;
+   if (dodoLifetimeTestModeEnabled()) {
+     await beginDodoLifetimeStoryPayment(story, actionButton);
+     return;
+   }
++  await beginDodoLifetimeLiveStoryPayment(story, actionButton);
++  return; // Legacy PayPal checkout retained below for rollback/reference, not used for NEW purchases.
+   const originalText = actionButton.textContent;
+   const startedAt = Date.now();
+   let leavingForPaypal = false;
+@@ -2939,7 +2983,7 @@
+     const payload = await response.json().catch(() => ({}));
+     if (!response.ok) {
+       if (payload.code === "LOCAL_LIVE_PAYPAL_BLOCKED") {
+-        showToast("Local safety check passed — no real $49 charge was created.");
++        showToast("Local safety check passed — no real $65 charge was created.");
+         return;
+       }
+       if (payload.code === "LOGIN_REQUIRED") { openGoogleLogin(); return; }
+@@ -3018,6 +3062,54 @@
+   progress.stop({ hide: true });
+   lifetimeReturnProgress = null;
+   showToast("Dodo test payment completed, but lifetime access is still processing. Refresh in a moment.");
++}
++
++async function handleLifetimeDodoLiveReturn() {
++  if (!state.lifetimePurchaseMode) return;
++  const url = new URL(location.href);
++  if (url.searchParams.get("dodo_live") !== "1") return;
++
++  const resultType = String(url.searchParams.get("dodo_lifetime") || "");
++  if (resultType === "cancelled") {
++    unlockLifetimeReturnInteraction();
++    lifetimeReturnProgress?.stop({ hide: true });
++    lifetimeReturnProgress = null;
++    url.searchParams.delete("dodo_lifetime");
++    history.replaceState({}, "", `${url.pathname}${url.search}`);
++    showToast("Dodo payment cancelled. No lifetime access was changed.");
++    return;
++  }
++  if (resultType !== "return") return;
++
++  const storyId = String(url.searchParams.get("story") || state.selectedStory?.id || "").trim();
++  lockLifetimeReturnInteraction();
++  const progress = lifetimeReturnProgress || startPersistentToastCountdown("Dodo payment received — verifying lifetime access…", 12);
++  lifetimeReturnProgress = progress;
++
++  for (let attempt = 0; attempt < 18; attempt++) {
++    try {
++      const response = await fetch("/api/story-purchases/mine", { cache: "no-store", credentials: "same-origin" });
++      const payload = await response.json().catch(() => ({}));
++      const purchases = Array.isArray(payload.purchases) ? payload.purchases : [];
++      const owned = purchases.some(item =>
++        item?.purchaseStatus === "Completed" &&
++        item?.entitlementStatus === "Active" &&
++        (String(item?.currentStoryId || "") === storyId || String(item?.originalStoryId || "") === storyId)
++      );
++      if (response.ok && owned) {
++        progress.message("Dodo payment verified ✓ Opening your purchased stories…");
++        await wait(650);
++        location.replace(`/?purchase=lifetime${storyId ? `&story=${encodeURIComponent(storyId)}` : ""}`);
++        return;
++      }
++    } catch {}
++    await wait(1000);
++  }
++
++  unlockLifetimeReturnInteraction();
++  progress.stop({ hide: true });
++  lifetimeReturnProgress = null;
++  showToast("Dodo payment completed, but lifetime access is still processing. Refresh in a moment.");
+ }
+ 
+ async function handleLifetimePaypalReturn() {
+@@ -3145,6 +3237,32 @@
+     window.location.assign(checkoutUrl);
+   } catch (error) {
+     showToast(error.message || "Dodo test checkout is not ready.");
++  }
++}
++
++async function openDodoLiveMembershipCheckout(tierId) {
++  if (!state.loggedIn) {
++    openGoogleLogin();
++    showToast("Log in first, then choose Join Membership again.");
++    return;
++  }
++  if (state.membershipActive) { showToast("Your membership is already active."); return; }
++
++  try {
++    showToast("Preparing Dodo live checkout…");
++    const response = await fetch("/api/payments/dodo/live-checkout", {
++      method: "POST",
++      credentials: "same-origin",
++      headers: { "content-type": "application/json" },
++      body: JSON.stringify({ tierId })
++    });
++    const payload = await response.json().catch(() => ({}));
++    if (!response.ok) throw new Error(payload.error || "Dodo live checkout is not ready.");
++    const checkoutUrl = String(payload.checkoutUrl || "").trim();
++    if (!checkoutUrl) throw new Error("Dodo did not return a checkout URL.");
++    window.location.assign(checkoutUrl);
++  } catch (error) {
++    showToast(error.message || "Dodo live checkout is not ready.");
+   }
+ }
+ 
+@@ -3210,7 +3328,7 @@
+ $("[data-choose-story]")?.addEventListener("click", event => {
+   event.preventDefault();
+   switchTab("stories", true, true);
+-  showToast("Choose the story you want, then select the $49 single-story option.");
++  showToast("Choose the story you want, then select the $65 single-story option.");
+ });
+ 
+ els.membershipTrack?.addEventListener("click", event => {
+@@ -3218,7 +3336,7 @@
+   if (!button) return;
+   const tierId = button.dataset.tierId || button.closest("[data-tier-id]")?.dataset.tierId || "";
+   if (dodoTestCheckoutEnabled()) openDodoTestMembershipCheckout(tierId);
+-  else openPaypalMembershipCheckout(tierId);
++  else openDodoLiveMembershipCheckout(tierId); // Existing PayPal subscriptions still renew on their provider.
+ });
+ 
+ els.contactButton?.addEventListener("click", () => {
+@@ -3902,6 +4020,34 @@
+   showToast("Dodo test payment completed, but activation is still processing. Refresh in a moment.");
+ }
+ 
++async function handleDodoLiveReturn() {
++  let params;
++  try { params = new URL(location.href).searchParams; } catch { return; }
++  if (params.get("dodo_live") !== "1") return;
++
++  if (params.get("dodo") === "cancelled") {
++    setTimeout(() => showToast("Dodo checkout was cancelled."), 500);
++    return;
++  }
++  if (params.get("dodo") !== "return") return;
++
++  showToast("Dodo payment returned — verifying membership activation…");
++  for (let attempt = 0; attempt < 15; attempt++) {
++    try {
++      const response = await fetch("/api/session", { credentials: "same-origin", cache: "no-store" });
++      const payload = await response.json().catch(() => ({}));
++      if (response.ok && payload.membershipActive) {
++        await loadData();
++        showToast("Dodo membership activated successfully.");
++        switchTab("stories", true, false);
++        return;
++      }
++    } catch {}
++    await new Promise(resolve => setTimeout(resolve, 1000));
++  }
++  showToast("Dodo payment completed, but activation is still processing. Refresh in a moment.");
++}
++
+ window.addEventListener("hashchange", () => {
+   const route = location.hash === "#posts" ? "posts" : (location.hash === "#membership" ? "membership" : (location.hash === "#chat" ? "chat" : "stories"));
+   switchTab(route, false);
+@@ -3950,6 +4096,9 @@
+   if (initialPaypalResult === "return") {
+     lockLifetimeReturnInteraction();
+     lifetimeReturnProgress = startPersistentToastCountdown("Payment approved — verifying secure access…", 10);
++  } else if (initialUrl.searchParams.get("dodo_live") === "1" && initialDodoLifetimeResult === "return") {
++    lockLifetimeReturnInteraction();
++    lifetimeReturnProgress = startPersistentToastCountdown("Dodo payment returned — verifying lifetime access…", 12);
+   } else if (initialUrl.searchParams.get("dodo_test") === "1" && initialDodoLifetimeResult === "return") {
+     lockLifetimeReturnInteraction();
+     lifetimeReturnProgress = startPersistentToastCountdown("Dodo test payment received — verifying lifetime access…", 12);
+@@ -3959,10 +4108,12 @@
+ loadData().then(async () => {
+   if (state.lifetimePurchaseMode) {
+     await handleLifetimeDodoTestReturn();
++    await handleLifetimeDodoLiveReturn();
+     await handleLifetimePaypalReturn();
+   } else {
+     handleLifetimeHomeArrival();
+     await handlePaypalSupportReturn();
+   }
+   await handleDodoTestReturn();
++  await handleDodoLiveReturn();
+ });

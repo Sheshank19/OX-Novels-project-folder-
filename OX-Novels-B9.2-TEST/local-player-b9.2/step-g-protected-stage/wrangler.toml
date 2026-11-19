@@ -1,0 +1,14 @@
+# NOT FOR DEPLOYMENT UNTIL USER APPROVES A SEPARATE WORKER AND KV.
+# COPY; do not rename or deploy during Step G's local verification.
+# Never alter the existing Step C or production Wrangler configuration.
+name = "ox-b92-step-g-protected-vault-stage"
+main = "src/worker.mjs"
+compatibility_date = "2026-10-15"
+workers_dev = true
+
+[vars]
+STAGE_MODE = "protected-quarantine-only"
+
+[[kv_namespaces]]
+binding = "PROTECTED_STAGE_KV"
+id = "a30dcb28a02c400ca4e6232830924c35"

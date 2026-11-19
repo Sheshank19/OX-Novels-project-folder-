@@ -1,0 +1,10 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+const here = path.dirname(fileURLToPath(import.meta.url));
+const root = path.resolve(here, '..');
+const templatePath = path.join(root, 'local-player-b4', 'src', 'worker-B4-template.js');
+const backupPath = path.join(here, 'backups', 'worker-B4-template.pre-B4.1.js');
+if (!fs.existsSync(backupPath)) throw new Error('No B4.1 backup exists yet.');
+fs.copyFileSync(backupPath, templatePath);
+console.log('Restored the pre-B4.1 B4 template. No deployment was performed.');

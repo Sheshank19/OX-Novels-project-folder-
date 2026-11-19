@@ -1,0 +1,905 @@
+const PLAYER_COOKIE = "__Host-ox_player";
+const HANDOFF_AAD = "OX_PLAYER_HANDOFF_V1";
+const SESSION_AAD = "OX_PLAYER_SESSION_V1";
+const TRACK_AAD = "OX_PLAYER_TRACK_V1";
+const OX_HOME = "https://oxnovels.top";
+
+const CATALOG_INDEX = {"a-dragon-s-revenge":{"storyId":"a-dragon-s-revenge","sourceVersion":"5d87b554a40b","generationId":"g_1790803922014_0d6ba158","folderCount":7,"trackCount":534,"catalogPath":"/catalogs/a-dragon-s-revenge.json?v=g_1790803922014_0d6ba158"},"a-god-among-men":{"storyId":"a-god-among-men","sourceVersion":"cd8781a3e169","generationId":"g_1791048282398_4e2a38b5","folderCount":12,"trackCount":998,"catalogPath":"/catalogs/a-god-among-men.json?v=g_1791048282398_4e2a38b5"},"a-list-affair":{"storyId":"a-list-affair","sourceVersion":"3b32aacd7585","generationId":"g_1791059029252_01e1ca5c","folderCount":5,"trackCount":327,"catalogPath":"/catalogs/a-list-affair.json?v=g_1791059029252_01e1ca5c"},"a-luna-s-broken-bond":{"storyId":"a-luna-s-broken-bond","sourceVersion":"3a29679c70a7","generationId":"g_1791058649415_c38a0d38","folderCount":1,"trackCount":4,"catalogPath":"/catalogs/a-luna-s-broken-bond.json?v=g_1791058649415_c38a0d38"},"a-mother-s-battle":{"storyId":"a-mother-s-battle","sourceVersion":"eadb8f79746d","generationId":"g_1791058656630_b1b1e4bf","folderCount":6,"trackCount":423,"catalogPath":"/catalogs/a-mother-s-battle.json?v=g_1791058656630_b1b1e4bf"},"a-mother-s-gambit":{"storyId":"a-mother-s-gambit","sourceVersion":"15a01ea68bfb","generationId":"g_1791058661411_1efac9ad","folderCount":3,"trackCount":160,"catalogPath":"/catalogs/a-mother-s-gambit.json?v=g_1791058661411_1efac9ad"},"a-sacrifice-that-lived":{"storyId":"a-sacrifice-that-lived","sourceVersion":"2d02e4d9ae0a","generationId":"g_1791059022968_2cc1cc05","folderCount":1,"trackCount":4,"catalogPath":"/catalogs/a-sacrifice-that-lived.json?v=g_1791059022968_2cc1cc05"},"alphas-deal":{"storyId":"alphas-deal","sourceVersion":"3ecaf2fa5dc2","generationId":"g_1791377994569_31f05e8c","folderCount":6,"trackCount":500,"catalogPath":"/catalogs/alphas-deal.json?v=g_1791377994569_31f05e8c"},"amulet-of-the-gods":{"storyId":"amulet-of-the-gods","sourceVersion":"7eeabc373968","generationId":"g_1791378009396_866a5cab","folderCount":6,"trackCount":438,"catalogPath":"/catalogs/amulet-of-the-gods.json?v=g_1791378009396_866a5cab"},"an-accidental-warrior":{"storyId":"an-accidental-warrior","sourceVersion":"68d402c9bc7c","generationId":"g_1791378017573_ad41731a","folderCount":4,"trackCount":280,"catalogPath":"/catalogs/an-accidental-warrior.json?v=g_1791378017573_ad41731a"},"ancient-energy":{"storyId":"ancient-energy","sourceVersion":"a4490330ee8d","generationId":"g_1791378026572_00019008","folderCount":6,"trackCount":410,"catalogPath":"/catalogs/ancient-energy.json?v=g_1791378026572_00019008"},"anonymous-amor":{"storyId":"anonymous-amor","sourceVersion":"1c028ed12dc5","generationId":"g_1791378041699_77d709e6","folderCount":6,"trackCount":497,"catalogPath":"/catalogs/anonymous-amor.json?v=g_1791378041699_77d709e6"},"ashes-to-fire":{"storyId":"ashes-to-fire","sourceVersion":"ca2c0f8041d5","generationId":"g_1791382546085_81d629bd","folderCount":20,"trackCount":1598,"catalogPath":"/catalogs/ashes-to-fire.json?v=g_1791382546085_81d629bd"},"battle-through-hevean":{"storyId":"battle-through-hevean","sourceVersion":"4a487c46c32d","generationId":"g_1791382082044_93e84fd6","folderCount":17,"trackCount":1541,"catalogPath":"/catalogs/battle-through-hevean.json?v=g_1791382082044_93e84fd6"},"beast-tamer-s-dominion":{"storyId":"beast-tamer-s-dominion","sourceVersion":"0fa3dc4bc4cd","generationId":"g_1791378120271_5a10c742","folderCount":3,"trackCount":200,"catalogPath":"/catalogs/beast-tamer-s-dominion.json?v=g_1791378120271_5a10c742"},"best-soldier-son-in-law":{"storyId":"best-soldier-son-in-law","sourceVersion":"0ca94e27e34f","generationId":"g_1791378140076_e07a9b13","folderCount":12,"trackCount":1050,"catalogPath":"/catalogs/best-soldier-son-in-law.json?v=g_1791378140076_e07a9b13"},"billionaire-s-hired-wife":{"storyId":"billionaire-s-hired-wife","sourceVersion":"284a14185a70","generationId":"g_1791382089628_0592d8cc","folderCount":5,"trackCount":364,"catalogPath":"/catalogs/billionaire-s-hired-wife.json?v=g_1791382089628_0592d8cc"},"birth-of-the-demonic-sword":{"storyId":"birth-of-the-demonic-sword","sourceVersion":"d836ffbd81be","generationId":"g_1791378212374_ec07e9c5","folderCount":25,"trackCount":2361,"catalogPath":"/catalogs/birth-of-the-demonic-sword.json?v=g_1791378212374_ec07e9c5"},"blade-of-the-forsaken":{"storyId":"blade-of-the-forsaken","sourceVersion":"f7907c266a9e","generationId":"g_1791378219268_5f838de4","folderCount":4,"trackCount":300,"catalogPath":"/catalogs/blade-of-the-forsaken.json?v=g_1791378219268_5f838de4"},"blood-warlock":{"storyId":"blood-warlock","sourceVersion":"cf1323ec44d7","generationId":"g_1791378239638_3b00b8ad","folderCount":15,"trackCount":1338,"catalogPath":"/catalogs/blood-warlock.json?v=g_1791378239638_3b00b8ad"},"bloodreign-second-awakening":{"storyId":"bloodreign-second-awakening","sourceVersion":"48818eb9df41","generationId":"g_1791378257625_15442ea0","folderCount":9,"trackCount":726,"catalogPath":"/catalogs/bloodreign-second-awakening.json?v=g_1791378257625_15442ea0"},"born-to-rule":{"storyId":"born-to-rule","sourceVersion":"29e4d260ab9b","generationId":"g_1791378264004_59e4cc54","folderCount":5,"trackCount":10,"catalogPath":"/catalogs/born-to-rule.json?v=g_1791378264004_59e4cc54"},"broken-pillars-of-oakburn":{"storyId":"broken-pillars-of-oakburn","sourceVersion":"23c430abe942","generationId":"g_1791378284947_5fad3b3f","folderCount":16,"trackCount":1484,"catalogPath":"/catalogs/broken-pillars-of-oakburn.json?v=g_1791378284947_5fad3b3f"},"campus-king":{"storyId":"campus-king","sourceVersion":"2303a59eebc5","generationId":"g_1791378299544_b54f0a4a","folderCount":9,"trackCount":781,"catalogPath":"/catalogs/campus-king.json?v=g_1791378299544_b54f0a4a"},"claimed-by-the-crown-prince":{"storyId":"claimed-by-the-crown-prince","sourceVersion":"7237a483efc8","generationId":"g_1791378301730_825009bf","folderCount":1,"trackCount":5,"catalogPath":"/catalogs/claimed-by-the-crown-prince.json?v=g_1791378301730_825009bf"},"cradle-to-conquest":{"storyId":"cradle-to-conquest","sourceVersion":"f3e53f12ebf0","generationId":"g_1791378363033_be30e699","folderCount":17,"trackCount":1371,"catalogPath":"/catalogs/cradle-to-conquest.json?v=g_1791378363033_be30e699"},"crowned-in-shadow":{"storyId":"crowned-in-shadow","sourceVersion":"a36a8758b982","generationId":"g_1791378367850_a30786e5","folderCount":1,"trackCount":7,"catalogPath":"/catalogs/crowned-in-shadow.json?v=g_1791378367850_a30786e5"},"cultivation-online":{"storyId":"cultivation-online","sourceVersion":"eb60ab6b46a9","generationId":"g_1791378383708_ef8d9140","folderCount":9,"trackCount":771,"catalogPath":"/catalogs/cultivation-online.json?v=g_1791378383708_ef8d9140"},"cupid-s-curse":{"storyId":"cupid-s-curse","sourceVersion":"5a8875ee4018","generationId":"g_1791378398722_f805e42a","folderCount":11,"trackCount":941,"catalogPath":"/catalogs/cupid-s-curse.json?v=g_1791378398722_f805e42a"},"cutthroat-courtship":{"storyId":"cutthroat-courtship","sourceVersion":"908b295482cc","generationId":"g_1791378408619_ba9ba809","folderCount":7,"trackCount":521,"catalogPath":"/catalogs/cutthroat-courtship.json?v=g_1791378408619_ba9ba809"},"dark-desire":{"storyId":"dark-desire","sourceVersion":"465b6f3e25cd","generationId":"g_1791378419594_6c25f94f","folderCount":7,"trackCount":535,"catalogPath":"/catalogs/dark-desire.json?v=g_1791378419594_6c25f94f"},"dark-magus-returns-02":{"storyId":"dark-magus-returns-02","sourceVersion":"69c574073a06","generationId":"g_1791378441622_dddb239b","folderCount":12,"trackCount":1101,"catalogPath":"/catalogs/dark-magus-returns-02.json?v=g_1791378441622_dddb239b"},"dark-star-reborn":{"storyId":"dark-star-reborn","sourceVersion":"8a411370242c","generationId":"g_1791378451338_6e290a8d","folderCount":1,"trackCount":4,"catalogPath":"/catalogs/dark-star-reborn.json?v=g_1791378451338_6e290a8d"},"dark-tide-express":{"storyId":"dark-tide-express","sourceVersion":"dd78d7abdcca","generationId":"g_1791378461276_ca570a66","folderCount":5,"trackCount":386,"catalogPath":"/catalogs/dark-tide-express.json?v=g_1791378461276_ca570a66"},"dark-warrior-s-heart":{"storyId":"dark-warrior-s-heart","sourceVersion":"b6395e6b9408","generationId":"g_1791378486605_57bb0de8","folderCount":11,"trackCount":973,"catalogPath":"/catalogs/dark-warrior-s-heart.json?v=g_1791378486605_57bb0de8"},"dead-reckoning":{"storyId":"dead-reckoning","sourceVersion":"209601d76b35","generationId":"g_1791378504742_079d1788","folderCount":11,"trackCount":906,"catalogPath":"/catalogs/dead-reckoning.json?v=g_1791378504742_079d1788"},"death-flag-villain":{"storyId":"death-flag-villain","sourceVersion":"31136bac5571","generationId":"g_1791378519756_9ad16354","folderCount":8,"trackCount":682,"catalogPath":"/catalogs/death-flag-villain.json?v=g_1791378519756_9ad16354"},"death-my-twin":{"storyId":"death-my-twin","sourceVersion":"d4de5771c1ce","generationId":"g_1791378527828_dfae29e5","folderCount":3,"trackCount":200,"catalogPath":"/catalogs/death-my-twin.json?v=g_1791378527828_dfae29e5"},"death-s-rebellion":{"storyId":"death-s-rebellion","sourceVersion":"bc5d91f40780","generationId":"g_1791378538041_d90c3210","folderCount":2,"trackCount":100,"catalogPath":"/catalogs/death-s-rebellion.json?v=g_1791378538041_d90c3210"},"destiny-reloaded":{"storyId":"destiny-reloaded","sourceVersion":"82356a7c4dab","generationId":"g_1791378557217_579c40ef","folderCount":13,"trackCount":1078,"catalogPath":"/catalogs/destiny-reloaded.json?v=g_1791378557217_579c40ef"},"destiny-s-play":{"storyId":"destiny-s-play","sourceVersion":"8d3d0700b50c","generationId":"g_1791378570775_c8d1a79c","folderCount":8,"trackCount":663,"catalogPath":"/catalogs/destiny-s-play.json?v=g_1791378570775_c8d1a79c"},"dianas-defence":{"storyId":"dianas-defence","sourceVersion":"3e6813f5a6f1","generationId":"g_1791378576948_35535b61","folderCount":4,"trackCount":272,"catalogPath":"/catalogs/dianas-defence.json?v=g_1791378576948_35535b61"},"domestication":{"storyId":"domestication","sourceVersion":"9626efcc1b97","generationId":"g_1791378584463_adeced9f","folderCount":2,"trackCount":47,"catalogPath":"/catalogs/domestication.json?v=g_1791378584463_adeced9f"},"dr-crackerjack-s-marriage":{"storyId":"dr-crackerjack-s-marriage","sourceVersion":"a09136a03c64","generationId":"g_1791378604777_02023e69","folderCount":6,"trackCount":476,"catalogPath":"/catalogs/dr-crackerjack-s-marriage.json?v=g_1791378604777_02023e69"},"dragon-emperor":{"storyId":"dragon-emperor","sourceVersion":"461f28e00bf8","generationId":"g_1791378614986_5a5e3f06","folderCount":7,"trackCount":560,"catalogPath":"/catalogs/dragon-emperor.json?v=g_1791378614986_5a5e3f06"},"dragon-of-sin":{"storyId":"dragon-of-sin","sourceVersion":"c651f84821e9","generationId":"g_1791378624288_4b391703","folderCount":4,"trackCount":300,"catalogPath":"/catalogs/dragon-of-sin.json?v=g_1791378624288_4b391703"},"dragon-system-awakening":{"storyId":"dragon-system-awakening","sourceVersion":"2df776bc7eea","generationId":"g_1791378636755_f1ae2acb","folderCount":5,"trackCount":403,"catalogPath":"/catalogs/dragon-system-awakening.json?v=g_1791378636755_f1ae2acb"},"earth-s-greatest-magus":{"storyId":"earth-s-greatest-magus","sourceVersion":"eab17305640a","generationId":"g_1791378639218_bf29174a","folderCount":1,"trackCount":4,"catalogPath":"/catalogs/earth-s-greatest-magus.json?v=g_1791378639218_bf29174a"},"enemies-to-lover":{"storyId":"enemies-to-lover","sourceVersion":"597332b5fc6e","generationId":"g_1791382101089_bbda6709","folderCount":7,"trackCount":566,"catalogPath":"/catalogs/enemies-to-lover.json?v=g_1791382101089_bbda6709"},"eternal-emperor":{"storyId":"eternal-emperor","sourceVersion":"86fff616b9aa","generationId":"g_1791378685189_953afa17","folderCount":3,"trackCount":150,"catalogPath":"/catalogs/eternal-emperor.json?v=g_1791378685189_953afa17"},"evolution-god":{"storyId":"evolution-god","sourceVersion":"c27945935c3b","generationId":"g_1791378692561_0cbba408","folderCount":1,"trackCount":5,"catalogPath":"/catalogs/evolution-god.json?v=g_1791378692561_0cbba408"},"extra-life":{"storyId":"extra-life","sourceVersion":"02fe21f58158","generationId":"g_1791378707745_b4353413","folderCount":9,"trackCount":741,"catalogPath":"/catalogs/extra-life.json?v=g_1791378707745_b4353413"},"fated-to-rebel":{"storyId":"fated-to-rebel","sourceVersion":"a73576de1892","generationId":"g_1791378720856_5a10c736","folderCount":8,"trackCount":656,"catalogPath":"/catalogs/fated-to-rebel.json?v=g_1791378720856_5a10c736"},"first-legendary-beast-master":{"storyId":"first-legendary-beast-master","sourceVersion":"f351d8391461","generationId":"g_1791378749530_e577a867","folderCount":20,"trackCount":1895,"catalogPath":"/catalogs/first-legendary-beast-master.json?v=g_1791378749530_e577a867"},"first-love-never-dies":{"storyId":"first-love-never-dies","sourceVersion":"adbc2fdcc8d4","generationId":"g_1791378764485_2b4ca16e","folderCount":6,"trackCount":436,"catalogPath":"/catalogs/first-love-never-dies.json?v=g_1791378764485_2b4ca16e"},"flameborne":{"storyId":"flameborne","sourceVersion":"d852a9900cd2","generationId":"g_1791378776492_716f38f2","folderCount":9,"trackCount":751,"catalogPath":"/catalogs/flameborne.json?v=g_1791378776492_716f38f2"},"forged-god":{"storyId":"forged-god","sourceVersion":"0a0a82d68b19","generationId":"g_1791378786674_3f388551","folderCount":7,"trackCount":600,"catalogPath":"/catalogs/forged-god.json?v=g_1791378786674_3f388551"},"forged-in-flames":{"storyId":"forged-in-flames","sourceVersion":"8fcc1e825682","generationId":"g_1791378793019_c457ecb4","folderCount":3,"trackCount":200,"catalogPath":"/catalogs/forged-in-flames.json?v=g_1791378793019_c457ecb4"},"forged-through-pain":{"storyId":"forged-through-pain","sourceVersion":"055a5d255e83","generationId":"g_1791378801705_9e7e9142","folderCount":4,"trackCount":300,"catalogPath":"/catalogs/forged-through-pain.json?v=g_1791378801705_9e7e9142"},"fortunes-reversed":{"storyId":"fortunes-reversed","sourceVersion":"953a050a8aa7","generationId":"g_1791378812842_e6de843d","folderCount":5,"trackCount":340,"catalogPath":"/catalogs/fortunes-reversed.json?v=g_1791378812842_e6de843d"},"genetic-ascendancy":{"storyId":"genetic-ascendancy","sourceVersion":"fc0dbaf0ef25","generationId":"g_1791378844602_6aa0fe78","folderCount":14,"trackCount":1200,"catalogPath":"/catalogs/genetic-ascendancy.json?v=g_1791378844602_6aa0fe78"},"god-eye":{"storyId":"god-eye","sourceVersion":"b08f577a00a4","generationId":"g_1791378878989_2d6177ea","folderCount":16,"trackCount":1478,"catalogPath":"/catalogs/god-eye.json?v=g_1791378878989_2d6177ea"},"god-of-the-six-elements":{"storyId":"god-of-the-six-elements","sourceVersion":"deaa4d2b0f21","generationId":"g_1791378887242_fd1daaec","folderCount":5,"trackCount":387,"catalogPath":"/catalogs/god-of-the-six-elements.json?v=g_1791378887242_fd1daaec"},"godkiller":{"storyId":"godkiller","sourceVersion":"07c7e904a5a7","generationId":"g_1791378900666_af23f457","folderCount":10,"trackCount":821,"catalogPath":"/catalogs/godkiller.json?v=g_1791378900666_af23f457"},"hacking-the-mafia-s-heart":{"storyId":"hacking-the-mafia-s-heart","sourceVersion":"2289e74d9eee","generationId":"g_1791378929063_afc41721","folderCount":3,"trackCount":204,"catalogPath":"/catalogs/hacking-the-mafia-s-heart.json?v=g_1791378929063_afc41721"},"heart-of-a-phoenix":{"storyId":"heart-of-a-phoenix","sourceVersion":"4534e15fec10","generationId":"g_1791378961664_f34c2f16","folderCount":25,"trackCount":2354,"catalogPath":"/catalogs/heart-of-a-phoenix.json?v=g_1791378961664_f34c2f16"},"heir-in-hiding":{"storyId":"heir-in-hiding","sourceVersion":"ffcae885ab88","generationId":"g_1791378993109_9a6b7616","folderCount":27,"trackCount":2598,"catalogPath":"/catalogs/heir-in-hiding.json?v=g_1791378993109_9a6b7616"},"heir-of-the-dragon":{"storyId":"heir-of-the-dragon","sourceVersion":"593d61fbc2e2","generationId":"g_1791379001824_1862e899","folderCount":3,"trackCount":136,"catalogPath":"/catalogs/heir-of-the-dragon.json?v=g_1791379001824_1862e899"},"heir-of-the-evil-god":{"storyId":"heir-of-the-evil-god","sourceVersion":"ffcd5a82983e","generationId":"g_1791379005820_7c26a7f3","folderCount":1,"trackCount":6,"catalogPath":"/catalogs/heir-of-the-evil-god.json?v=g_1791379005820_7c26a7f3"},"heir-to-the-world":{"storyId":"heir-to-the-world","sourceVersion":"f521d3817421","generationId":"g_1791379016627_ea91dce2","folderCount":5,"trackCount":345,"catalogPath":"/catalogs/heir-to-the-world.json?v=g_1791379016627_ea91dce2"},"hellbound-with-you":{"storyId":"hellbound-with-you","sourceVersion":"7f8adb5cddcb","generationId":"g_1791379025874_4e936d9e","folderCount":8,"trackCount":619,"catalogPath":"/catalogs/hellbound-with-you.json?v=g_1791379025874_4e936d9e"},"hellfire-hearts":{"storyId":"hellfire-hearts","sourceVersion":"4e8f02f869cb","generationId":"g_1791379028448_31d8482d","folderCount":1,"trackCount":4,"catalogPath":"/catalogs/hellfire-hearts.json?v=g_1791379028448_31d8482d"},"her-secret-twins":{"storyId":"her-secret-twins","sourceVersion":"fbfe781d6b6c","generationId":"g_1791379038697_95e4f1aa","folderCount":3,"trackCount":208,"catalogPath":"/catalogs/her-secret-twins.json?v=g_1791379038697_95e4f1aa"},"his-four-little-rascals":{"storyId":"his-four-little-rascals","sourceVersion":"76171d17fd5d","generationId":"g_1791379049861_9f5ac026","folderCount":3,"trackCount":200,"catalogPath":"/catalogs/his-four-little-rascals.json?v=g_1791379049861_9f5ac026"},"his-stella-r-obsession":{"storyId":"his-stella-r-obsession","sourceVersion":"5cbda1c2c172","generationId":"g_1791379054857_9b97844a","folderCount":3,"trackCount":200,"catalogPath":"/catalogs/his-stella-r-obsession.json?v=g_1791379054857_9b97844a"},"his-sword-remembers":{"storyId":"his-sword-remembers","sourceVersion":"34b7aaf0d688","generationId":"g_1791379064093_ea41e125","folderCount":5,"trackCount":400,"catalogPath":"/catalogs/his-sword-remembers.json?v=g_1791379064093_ea41e125"},"holy-blood":{"storyId":"holy-blood","sourceVersion":"e7381daefa41","generationId":"g_1791379073157_0d30ffe6","folderCount":7,"trackCount":512,"catalogPath":"/catalogs/holy-blood.json?v=g_1791379073157_0d30ffe6"},"home-coming":{"storyId":"home-coming","sourceVersion":"d25527a5473c","generationId":"g_1791379081548_4b077906","folderCount":4,"trackCount":264,"catalogPath":"/catalogs/home-coming.json?v=g_1791379081548_4b077906"},"i-m-married-to-a-stranger":{"storyId":"i-m-married-to-a-stranger","sourceVersion":"c668ddaded61","generationId":"g_1791379087749_08a34bc2","folderCount":4,"trackCount":265,"catalogPath":"/catalogs/i-m-married-to-a-stranger.json?v=g_1791379087749_08a34bc2"},"immortal-heroes":{"storyId":"immortal-heroes","sourceVersion":"e2d4a04e6215","generationId":"g_1791379094877_d93858c2","folderCount":5,"trackCount":362,"catalogPath":"/catalogs/immortal-heroes.json?v=g_1791379094877_d93858c2"},"in-the-super-cards":{"storyId":"in-the-super-cards","sourceVersion":"15024cc2a670","generationId":"g_1791379102173_28251b37","folderCount":5,"trackCount":400,"catalogPath":"/catalogs/in-the-super-cards.json?v=g_1791379102173_28251b37"},"incarnate-of-the-war-god":{"storyId":"incarnate-of-the-war-god","sourceVersion":"416abdd9c91f","generationId":"g_1791379114768_a8b53f93","folderCount":8,"trackCount":701,"catalogPath":"/catalogs/incarnate-of-the-war-god.json?v=g_1791379114768_a8b53f93"},"incredible-nicholas-lancaster":{"storyId":"incredible-nicholas-lancaster","sourceVersion":"529f3f30b264","generationId":"g_1791379120199_39af263f","folderCount":3,"trackCount":200,"catalogPath":"/catalogs/incredible-nicholas-lancaster.json?v=g_1791379120199_39af263f"},"infinite-mana-in-the-apocalypse":{"storyId":"infinite-mana-in-the-apocalypse","sourceVersion":"e397e4b84d4f","generationId":"g_1791379166722_3d103cf5","folderCount":16,"trackCount":1391,"catalogPath":"/catalogs/infinite-mana-in-the-apocalypse.json?v=g_1791379166722_3d103cf5"},"insta-empire":{"storyId":"insta-empire","sourceVersion":"8b208c8b5b35","generationId":"g_1791382122859_acbfd481","folderCount":18,"trackCount":1680,"catalogPath":"/catalogs/insta-empire.json?v=g_1791382122859_acbfd481"},"insta-millionaire":{"storyId":"insta-millionaire","sourceVersion":"6eb6660e6853","generationId":"g_1791379277828_c25c2ced","folderCount":15,"trackCount":1383,"catalogPath":"/catalogs/insta-millionaire.json?v=g_1791379277828_c25c2ced"},"invincible-bloodline":{"storyId":"invincible-bloodline","sourceVersion":"646723c8cb71","generationId":"g_1791379286497_a4bafa6a","folderCount":4,"trackCount":269,"catalogPath":"/catalogs/invincible-bloodline.json?v=g_1791379286497_a4bafa6a"},"jack-s-retribution":{"storyId":"jack-s-retribution","sourceVersion":"617b1711939c","generationId":"g_1791379322733_7b49a6b5","folderCount":26,"trackCount":2444,"catalogPath":"/catalogs/jack-s-retribution.json?v=g_1791379322733_7b49a6b5"},"jason-s-billion-dollar-twist":{"storyId":"jason-s-billion-dollar-twist","sourceVersion":"2eb0b937e4a5","generationId":"g_1791379338085_5d095b95","folderCount":11,"trackCount":906,"catalogPath":"/catalogs/jason-s-billion-dollar-twist.json?v=g_1791379338085_5d095b95"},"king-of-immortal-sword":{"storyId":"king-of-immortal-sword","sourceVersion":"2a5cb7b2e607","generationId":"g_1791379350698_33a31312","folderCount":9,"trackCount":723,"catalogPath":"/catalogs/king-of-immortal-sword.json?v=g_1791379350698_33a31312"},"king-of-nine-flames":{"storyId":"king-of-nine-flames","sourceVersion":"236db2eb8131","generationId":"g_1791379379103_483fef1f","folderCount":19,"trackCount":1706,"catalogPath":"/catalogs/king-of-nine-flames.json?v=g_1791379379103_483fef1f"},"level-up-with-the-gods":{"storyId":"level-up-with-the-gods","sourceVersion":"2b4273426eb2","generationId":"g_1791379393676_cc9ea739","folderCount":4,"trackCount":300,"catalogPath":"/catalogs/level-up-with-the-gods.json?v=g_1791379393676_cc9ea739"},"library-of-flaws":{"storyId":"library-of-flaws","sourceVersion":"d4ee89dab16a","generationId":"g_1791379423014_65d8dadc","folderCount":22,"trackCount":2072,"catalogPath":"/catalogs/library-of-flaws.json?v=g_1791379423014_65d8dadc"},"logan-s-revenge":{"storyId":"logan-s-revenge","sourceVersion":"a2634d953ff5","generationId":"g_1791379435697_aab10353","folderCount":11,"trackCount":972,"catalogPath":"/catalogs/logan-s-revenge.json?v=g_1791379435697_aab10353"},"lord-of-mysteries":{"storyId":"lord-of-mysteries","sourceVersion":"8646abdfea59","generationId":"g_1791379452550_a23326d3","folderCount":14,"trackCount":1237,"catalogPath":"/catalogs/lord-of-mysteries.json?v=g_1791379452550_a23326d3"},"lord-of-the-beasts":{"storyId":"lord-of-the-beasts","sourceVersion":"f34868a65aea","generationId":"g_1791379460562_9b384bb6","folderCount":3,"trackCount":200,"catalogPath":"/catalogs/lord-of-the-beasts.json?v=g_1791379460562_9b384bb6"},"lose-you-to-love-me":{"storyId":"lose-you-to-love-me","sourceVersion":"e7613625fcfe","generationId":"g_1791379465711_8aa90b5a","folderCount":3,"trackCount":100,"catalogPath":"/catalogs/lose-you-to-love-me.json?v=g_1791379465711_8aa90b5a"},"love-bargain":{"storyId":"love-bargain","sourceVersion":"687f917c636e","generationId":"g_1791379482097_d0cf2ae1","folderCount":4,"trackCount":280,"catalogPath":"/catalogs/love-bargain.json?v=g_1791379482097_d0cf2ae1"},"love-contract":{"storyId":"love-contract","sourceVersion":"c1ea11055e9b","generationId":"g_1791379506142_9919f6de","folderCount":18,"trackCount":1650,"catalogPath":"/catalogs/love-contract.json?v=g_1791379506142_9919f6de"},"love-in-the-billion-dollar-lane":{"storyId":"love-in-the-billion-dollar-lane","sourceVersion":"8e825382cdc8","generationId":"g_1791379511961_0b7722fd","folderCount":3,"trackCount":137,"catalogPath":"/catalogs/love-in-the-billion-dollar-lane.json?v=g_1791379511961_0b7722fd"},"love-locked-loaded":{"storyId":"love-locked-loaded","sourceVersion":"17e451fefd15","generationId":"g_1791379475903_2520bcbd","folderCount":5,"trackCount":364,"catalogPath":"/catalogs/love-locked-loaded.json?v=g_1791379475903_2520bcbd"},"love-potion":{"storyId":"love-potion","sourceVersion":"8e416d158f20","generationId":"g_1791379524597_7ea7e756","folderCount":12,"trackCount":1051,"catalogPath":"/catalogs/love-potion.json?v=g_1791379524597_7ea7e756"},"love-trap":{"storyId":"love-trap","sourceVersion":"c82c50bdeca1","generationId":"g_1791379530662_64797138","folderCount":2,"trackCount":100,"catalogPath":"/catalogs/love-trap.json?v=g_1791379530662_64797138"},"mad-vampire-lord-s-bride":{"storyId":"mad-vampire-lord-s-bride","sourceVersion":"8beae4553999","generationId":"g_1791379543073_2293ff3d","folderCount":7,"trackCount":501,"catalogPath":"/catalogs/mad-vampire-lord-s-bride.json?v=g_1791379543073_2293ff3d"},"magic-trading-system":{"storyId":"magic-trading-system","sourceVersion":"0ab784868c02","generationId":"g_1791379559682_036c1f1c","folderCount":5,"trackCount":335,"catalogPath":"/catalogs/magic-trading-system.json?v=g_1791379559682_036c1f1c"},"major-league-system":{"storyId":"major-league-system","sourceVersion":"863db60055b5","generationId":"g_1791382137425_49c36d3f","folderCount":10,"trackCount":900,"catalogPath":"/catalogs/major-league-system.json?v=g_1791382137425_49c36d3f"},"mama-s-lil-kings":{"storyId":"mama-s-lil-kings","sourceVersion":"2ffb9cc10700","generationId":"g_1791379599422_e64486ce","folderCount":1,"trackCount":12,"catalogPath":"/catalogs/mama-s-lil-kings.json?v=g_1791379599422_e64486ce"},"manna-from-heaven":{"storyId":"manna-from-heaven","sourceVersion":"7f3111275c4b","generationId":"g_1791379612012_f13b8000","folderCount":10,"trackCount":838,"catalogPath":"/catalogs/manna-from-heaven.json?v=g_1791379612012_f13b8000"},"mark-of-the-fool":{"storyId":"mark-of-the-fool","sourceVersion":"45d4e20985ce","generationId":"g_1791379619737_cc0ab305","folderCount":2,"trackCount":75,"catalogPath":"/catalogs/mark-of-the-fool.json?v=g_1791379619737_cc0ab305"},"marked-by-my-best-friend-s-alpha-brothers":{"storyId":"marked-by-my-best-friend-s-alpha-brothers","sourceVersion":"761fc326ed76","generationId":"g_1791379622081_ab04a021","folderCount":1,"trackCount":5,"catalogPath":"/catalogs/marked-by-my-best-friend-s-alpha-brothers.json?v=g_1791379622081_ab04a021"},"marked-by-the-rogues":{"storyId":"marked-by-the-rogues","sourceVersion":"1ad825f664e9","generationId":"g_1791379634406_5058e444","folderCount":8,"trackCount":7,"catalogPath":"/catalogs/marked-by-the-rogues.json?v=g_1791379634406_5058e444"},"martial-arts-master":{"storyId":"martial-arts-master","sourceVersion":"c7a1d6e51ca6","generationId":"g_1791379657565_39fca7af","folderCount":19,"trackCount":1723,"catalogPath":"/catalogs/martial-arts-master.json?v=g_1791379657565_39fca7af"},"metempsychosis":{"storyId":"metempsychosis","sourceVersion":"665ac8318746","generationId":"g_1791379665556_3147ec4d","folderCount":5,"trackCount":339,"catalogPath":"/catalogs/metempsychosis.json?v=g_1791379665556_3147ec4d"},"mutant-awakening":{"storyId":"mutant-awakening","sourceVersion":"285ea00796b3","generationId":"g_1791379674601_48ffffbf","folderCount":7,"trackCount":324,"catalogPath":"/catalogs/mutant-awakening.json?v=g_1791379674601_48ffffbf"},"my-assassin-system":{"storyId":"my-assassin-system","sourceVersion":"9b26baf3ddd8","generationId":"g_1791379683231_3ddcf3de","folderCount":8,"trackCount":101,"catalogPath":"/catalogs/my-assassin-system.json?v=g_1791379683231_3ddcf3de"},"my-detective-system":{"storyId":"my-detective-system","sourceVersion":"bd8b0ce60a67","generationId":"g_1791379694531_a316ebfd","folderCount":3,"trackCount":199,"catalogPath":"/catalogs/my-detective-system.json?v=g_1791379694531_a316ebfd"},"my-divine-slayer-system":{"storyId":"my-divine-slayer-system","sourceVersion":"fe3b7fc6b24d","generationId":"g_1791379709319_e65023a2","folderCount":12,"trackCount":1019,"catalogPath":"/catalogs/my-divine-slayer-system.json?v=g_1791379709319_e65023a2"},"my-dragon-princess":{"storyId":"my-dragon-princess","sourceVersion":"93cb3360313d","generationId":"g_1791379728733_a73529c7","folderCount":13,"trackCount":1119,"catalogPath":"/catalogs/my-dragon-princess.json?v=g_1791379728733_a73529c7"},"my-dragonic-system":{"storyId":"my-dragonic-system","sourceVersion":"cfb54ed3658c","generationId":"g_1791379743339_559fd28e","folderCount":7,"trackCount":454,"catalogPath":"/catalogs/my-dragonic-system.json?v=g_1791379743339_559fd28e"},"my-super-opulent-system":{"storyId":"my-super-opulent-system","sourceVersion":"02e3315e5009","generationId":"g_1791379755193_9b826ee0","folderCount":6,"trackCount":438,"catalogPath":"/catalogs/my-super-opulent-system.json?v=g_1791379755193_9b826ee0"},"my-three-wives-are-beautiful-vampires":{"storyId":"my-three-wives-are-beautiful-vampires","sourceVersion":"3860ac5ddda0","generationId":"g_1791379772744_af0a210a","folderCount":13,"trackCount":1134,"catalogPath":"/catalogs/my-three-wives-are-beautiful-vampires.json?v=g_1791379772744_af0a210a"},"my-vampire-system":{"storyId":"my-vampire-system","sourceVersion":"b4eed2cd06b8","generationId":"g_1791379806447_db1a1e1f","folderCount":24,"trackCount":2296,"catalogPath":"/catalogs/my-vampire-system.json?v=g_1791379806447_db1a1e1f"},"my-werewolf-system":{"storyId":"my-werewolf-system","sourceVersion":"3f3ae846a7d2","generationId":"g_1791379815407_a13a217f","folderCount":5,"trackCount":407,"catalogPath":"/catalogs/my-werewolf-system.json?v=g_1791379815407_a13a217f"},"mystical-realms-in-my-inbox":{"storyId":"mystical-realms-in-my-inbox","sourceVersion":"710dbc42f702","generationId":"g_1791379823202_83bb5ed5","folderCount":5,"trackCount":400,"catalogPath":"/catalogs/mystical-realms-in-my-inbox.json?v=g_1791379823202_83bb5ed5"},"nathan-the-greatest-warrior":{"storyId":"nathan-the-greatest-warrior","sourceVersion":"d44ee0a44d7c","generationId":"g_1791379831813_18aa4d66","folderCount":4,"trackCount":285,"catalogPath":"/catalogs/nathan-the-greatest-warrior.json?v=g_1791379831813_18aa4d66"},"no-longer-your-luna":{"storyId":"no-longer-your-luna","sourceVersion":"4f10f49c9405","generationId":"g_1791379834097_59531450","folderCount":1,"trackCount":4,"catalogPath":"/catalogs/no-longer-your-luna.json?v=g_1791379834097_59531450"},"only-the-strong-survive":{"storyId":"only-the-strong-survive","sourceVersion":"2a45ea03bdf8","generationId":"g_1791379844680_d3d7df41","folderCount":7,"trackCount":506,"catalogPath":"/catalogs/only-the-strong-survive.json?v=g_1791379844680_d3d7df41"},"owen-liam":{"storyId":"owen-liam","sourceVersion":"3abbd37d03ca","generationId":"g_1791379856993_e939351c","folderCount":9,"trackCount":633,"catalogPath":"/catalogs/owen-liam.json?v=g_1791379856993_e939351c"},"phoenix-system-chose-me":{"storyId":"phoenix-system-chose-me","sourceVersion":"5c51978dfab5","generationId":"g_1791379864207_32aec155","folderCount":7,"trackCount":13,"catalogPath":"/catalogs/phoenix-system-chose-me.json?v=g_1791379864207_32aec155"},"poisoned-power":{"storyId":"poisoned-power","sourceVersion":"c2d9dc2287fb","generationId":"g_1791379871945_6e50490e","folderCount":5,"trackCount":354,"catalogPath":"/catalogs/poisoned-power.json?v=g_1791379871945_6e50490e"},"price-of-love":{"storyId":"price-of-love","sourceVersion":"aaa38e7429fc","generationId":"g_1791379877260_0a1b02fc","folderCount":2,"trackCount":4,"catalogPath":"/catalogs/price-of-love.json?v=g_1791379877260_0a1b02fc"},"primal-partner":{"storyId":"primal-partner","sourceVersion":"7c492ba5494b","generationId":"g_1791379882322_0ef07872","folderCount":3,"trackCount":100,"catalogPath":"/catalogs/primal-partner.json?v=g_1791379882322_0ef07872"},"rags-to-riches":{"storyId":"rags-to-riches","sourceVersion":"ccce6996bb5a","generationId":"g_1791379893832_d59f3592","folderCount":6,"trackCount":407,"catalogPath":"/catalogs/rags-to-riches.json?v=g_1791379893832_d59f3592"},"re-evolution":{"storyId":"re-evolution","sourceVersion":"5aed89d49a42","generationId":"g_1791379905301_2e351b01","folderCount":8,"trackCount":623,"catalogPath":"/catalogs/re-evolution.json?v=g_1791379905301_2e351b01"},"realm-of-myths-and-legends":{"storyId":"realm-of-myths-and-legends","sourceVersion":"675760440e30","generationId":"g_1791379910021_5be2e937","folderCount":2,"trackCount":100,"catalogPath":"/catalogs/realm-of-myths-and-legends.json?v=g_1791379910021_5be2e937"},"rebirth-of-the-silent-maestro":{"storyId":"rebirth-of-the-silent-maestro","sourceVersion":"8e56e9988916","generationId":"g_1791379917521_35fef8c0","folderCount":5,"trackCount":400,"catalogPath":"/catalogs/rebirth-of-the-silent-maestro.json?v=g_1791379917521_35fef8c0"},"reborn-as-a-demon":{"storyId":"reborn-as-a-demon","sourceVersion":"5a5dd5e7c64b","generationId":"g_1791379929143_4e2a4e2f","folderCount":7,"trackCount":600,"catalogPath":"/catalogs/reborn-as-a-demon.json?v=g_1791379929143_4e2a4e2f"},"reign-of-the-hidden-commander":{"storyId":"reign-of-the-hidden-commander","sourceVersion":"be6705d6530e","generationId":"g_1791379931504_b6515599","folderCount":1,"trackCount":11,"catalogPath":"/catalogs/reign-of-the-hidden-commander.json?v=g_1791379931504_b6515599"},"reincarnated-as-a-fox-with-system":{"storyId":"reincarnated-as-a-fox-with-system","sourceVersion":"bfb8c693f03b","generationId":"g_1791379948120_dc7b0bb1","folderCount":13,"trackCount":1147,"catalogPath":"/catalogs/reincarnated-as-a-fox-with-system.json?v=g_1791379948120_dc7b0bb1"},"reincarnated-with-the-strongest-system":{"storyId":"reincarnated-with-the-strongest-system","sourceVersion":"9b132bfff3b5","generationId":"g_1791379965742_29cba21f","folderCount":15,"trackCount":1371,"catalogPath":"/catalogs/reincarnated-with-the-strongest-system.json?v=g_1791379965742_29cba21f"},"rekindled-heartache":{"storyId":"rekindled-heartache","sourceVersion":"48014b374b7a","generationId":"g_1791379976363_ba038bbb","folderCount":10,"trackCount":797,"catalogPath":"/catalogs/rekindled-heartache.json?v=g_1791379976363_ba038bbb"},"release-that-witch":{"storyId":"release-that-witch","sourceVersion":"457571dde479","generationId":"g_1791379999406_b755a359","folderCount":14,"trackCount":1262,"catalogPath":"/catalogs/release-that-witch.json?v=g_1791379999406_b755a359"},"resurrected-as-a-secret-billionaire-liam-carson":{"storyId":"resurrected-as-a-secret-billionaire-liam-carson","sourceVersion":"3f8ee8f750ee","generationId":"g_1791380006959_ef0fa2ca","folderCount":3,"trackCount":200,"catalogPath":"/catalogs/resurrected-as-a-secret-billionaire-liam-carson.json?v=g_1791380006959_ef0fa2ca"},"return-from-the-immortal-world":{"storyId":"return-from-the-immortal-world","sourceVersion":"3675f3e079f4","generationId":"g_1791380014007_0cc23ac3","folderCount":6,"trackCount":464,"catalogPath":"/catalogs/return-from-the-immortal-world.json?v=g_1791380014007_0cc23ac3"},"rise-of-the-beastmaster":{"storyId":"rise-of-the-beastmaster","sourceVersion":"20597d2ac384","generationId":"g_1791380032793_8a1508a0","folderCount":14,"trackCount":1343,"catalogPath":"/catalogs/rise-of-the-beastmaster.json?v=g_1791380032793_8a1508a0"},"rise-of-the-demon-god":{"storyId":"rise-of-the-demon-god","sourceVersion":"31d955631e0c","generationId":"g_1791380048691_5a067c32","folderCount":10,"trackCount":864,"catalogPath":"/catalogs/rise-of-the-demon-god.json?v=g_1791380048691_5a067c32"},"rothman-s-secret":{"storyId":"rothman-s-secret","sourceVersion":"2f45f3a8552b","generationId":"g_1791380066123_4cd3749a","folderCount":11,"trackCount":996,"catalogPath":"/catalogs/rothman-s-secret.json?v=g_1791380066123_4cd3749a"},"ruthless-rich":{"storyId":"ruthless-rich","sourceVersion":"e5c704a46ab2","generationId":"g_1791380077386_8c53201e","folderCount":6,"trackCount":500,"catalogPath":"/catalogs/ruthless-rich.json?v=g_1791380077386_8c53201e"},"saving-nora":{"storyId":"saving-nora","sourceVersion":"bcad5bb33e56","generationId":"g_1791380110440_02153b55","folderCount":25,"trackCount":2331,"catalogPath":"/catalogs/saving-nora.json?v=g_1791380110440_02153b55"},"secret-succession":{"storyId":"secret-succession","sourceVersion":"9ac315c52a90","generationId":"g_1791380125986_613bdcf5","folderCount":11,"trackCount":937,"catalogPath":"/catalogs/secret-succession.json?v=g_1791380125986_613bdcf5"},"shadow-billionaire":{"storyId":"shadow-billionaire","sourceVersion":"13fa34a5bcb7","generationId":"g_1791380136975_47c65298","folderCount":7,"trackCount":564,"catalogPath":"/catalogs/shadow-billionaire.json?v=g_1791380136975_47c65298"},"shadowslave":{"storyId":"shadowslave","sourceVersion":"75e71fd84bf0","generationId":"g_1791380163884_127a052d","folderCount":22,"trackCount":2051,"catalogPath":"/catalogs/shadowslave.json?v=g_1791380163884_127a052d"},"she-s-so-back":{"storyId":"she-s-so-back","sourceVersion":"03df0d3bd2c6","generationId":"g_1791380166667_fadd196f","folderCount":1,"trackCount":6,"catalogPath":"/catalogs/she-s-so-back.json?v=g_1791380166667_fadd196f"},"signed-bound":{"storyId":"signed-bound","sourceVersion":"dc181ab8cddc","generationId":"g_1791380175874_03f122be","folderCount":7,"trackCount":204,"catalogPath":"/catalogs/signed-bound.json?v=g_1791380175874_03f122be"},"skypiercer":{"storyId":"skypiercer","sourceVersion":"3827f7d08fb8","generationId":"g_1791380185675_8e98a5b0","folderCount":5,"trackCount":351,"catalogPath":"/catalogs/skypiercer.json?v=g_1791380185675_8e98a5b0"},"solo-leveling":{"storyId":"solo-leveling","sourceVersion":"821fd6ee7254","generationId":"g_1791380189068_2339f8bd","folderCount":1,"trackCount":1,"catalogPath":"/catalogs/solo-leveling.json?v=g_1791380189068_2339f8bd"},"soul-pets-white-nightmare":{"storyId":"soul-pets-white-nightmare","sourceVersion":"38c5835352f1","generationId":"g_1791380207887_0dfffe5e","folderCount":3,"trackCount":200,"catalogPath":"/catalogs/soul-pets-white-nightmare.json?v=g_1791380207887_0dfffe5e"},"stealth-billionaire":{"storyId":"stealth-billionaire","sourceVersion":"2a3062231527","generationId":"g_1791380217452_f6661c28","folderCount":4,"trackCount":230,"catalogPath":"/catalogs/stealth-billionaire.json?v=g_1791380217452_f6661c28"},"strongest-necromancer":{"storyId":"strongest-necromancer","sourceVersion":"c610c4a2b001","generationId":"g_1791382152972_fa890aff","folderCount":13,"trackCount":1194,"catalogPath":"/catalogs/strongest-necromancer.json?v=g_1791382152972_fa890aff"},"strongest-replication":{"storyId":"strongest-replication","sourceVersion":"e6fc2c76afd6","generationId":"g_1791380288587_5aae79ca","folderCount":1,"trackCount":0,"catalogPath":"/catalogs/strongest-replication.json?v=g_1791380288587_5aae79ca"},"strongest-warlock":{"storyId":"strongest-warlock","sourceVersion":"19d9db9278da","generationId":"g_1791380314386_f0c81700","folderCount":13,"trackCount":1122,"catalogPath":"/catalogs/strongest-warlock.json?v=g_1791380314386_f0c81700"},"super-gene":{"storyId":"super-gene","sourceVersion":"8635274aff09","generationId":"g_1791383044226_70a5e770","folderCount":30,"trackCount":2832,"catalogPath":"/catalogs/super-gene.json?v=g_1791383044226_70a5e770"},"supreme-lord":{"storyId":"supreme-lord","sourceVersion":"e6ffc055d7f7","generationId":"g_1791380368926_5083e1ce","folderCount":12,"trackCount":1066,"catalogPath":"/catalogs/supreme-lord.json?v=g_1791380368926_5083e1ce"},"supreme-magus":{"storyId":"supreme-magus","sourceVersion":"4a1f0abb4fc5","generationId":"g_1791380396338_81672018","folderCount":24,"trackCount":2281,"catalogPath":"/catalogs/supreme-magus.json?v=g_1791380396338_81672018"},"sweet-little-lies":{"storyId":"sweet-little-lies","sourceVersion":"093333d8f2a6","generationId":"g_1791380405465_33a55d4a","folderCount":7,"trackCount":562,"catalogPath":"/catalogs/sweet-little-lies.json?v=g_1791380405465_33a55d4a"},"sword-deity":{"storyId":"sword-deity","sourceVersion":"31c84c6994c0","generationId":"g_1791380424820_43cd37ad","folderCount":16,"trackCount":1468,"catalogPath":"/catalogs/sword-deity.json?v=g_1791380424820_43cd37ad"},"system-chose-zane":{"storyId":"system-chose-zane","sourceVersion":"0338ed369a16","generationId":"g_1791380430271_352745f2","folderCount":3,"trackCount":110,"catalogPath":"/catalogs/system-chose-zane.json?v=g_1791380430271_352745f2"},"the-accidental-mother":{"storyId":"the-accidental-mother","sourceVersion":"750c54420dd9","generationId":"g_1791380450896_ce2088d4","folderCount":18,"trackCount":1670,"catalogPath":"/catalogs/the-accidental-mother.json?v=g_1791380450896_ce2088d4"},"the-accidental-tycoon":{"storyId":"the-accidental-tycoon","sourceVersion":"cdb77e77023e","generationId":"g_1791380456094_618af165","folderCount":2,"trackCount":100,"catalogPath":"/catalogs/the-accidental-tycoon.json?v=g_1791380456094_618af165"},"the-age-of-ascension":{"storyId":"the-age-of-ascension","sourceVersion":"4ba313506c47","generationId":"g_1791380464813_3b5c0818","folderCount":5,"trackCount":396,"catalogPath":"/catalogs/the-age-of-ascension.json?v=g_1791380464813_3b5c0818"},"the-alpha-who-knelt":{"storyId":"the-alpha-who-knelt","sourceVersion":"dcb8d2973b6a","generationId":"g_1791380466729_d9f4e1d7","folderCount":1,"trackCount":4,"catalogPath":"/catalogs/the-alpha-who-knelt.json?v=g_1791380466729_d9f4e1d7"},"the-assassin-s-code":{"storyId":"the-assassin-s-code","sourceVersion":"20f0000973aa","generationId":"g_1791380475139_009331de","folderCount":2,"trackCount":100,"catalogPath":"/catalogs/the-assassin-s-code.json?v=g_1791380475139_009331de"},"the-awakening-of-the-hidden-flame":{"storyId":"the-awakening-of-the-hidden-flame","sourceVersion":"2194794b57b8","generationId":"g_1791380499708_82dd9914","folderCount":18,"trackCount":1651,"catalogPath":"/catalogs/the-awakening-of-the-hidden-flame.json?v=g_1791380499708_82dd9914"},"the-beginning-after-the-end-early-years":{"storyId":"the-beginning-after-the-end-early-years","sourceVersion":"2b549d570460","generationId":"g_1791380506173_92981212","folderCount":2,"trackCount":43,"catalogPath":"/catalogs/the-beginning-after-the-end-early-years.json?v=g_1791380506173_92981212"},"the-billionaire-bastard":{"storyId":"the-billionaire-bastard","sourceVersion":"604ff79e3d88","generationId":"g_1791380520015_2d0789c2","folderCount":11,"trackCount":974,"catalogPath":"/catalogs/the-billionaire-bastard.json?v=g_1791380520015_2d0789c2"},"the-billionaire-s-accidental-bride":{"storyId":"the-billionaire-s-accidental-bride","sourceVersion":"164effdec9af","generationId":"g_1791380565648_530d8dde","folderCount":17,"trackCount":1565,"catalogPath":"/catalogs/the-billionaire-s-accidental-bride.json?v=g_1791380565648_530d8dde"},"the-bodyguard-files":{"storyId":"the-bodyguard-files","sourceVersion":"2c3fb6703144","generationId":"g_1791380575283_7c31609a","folderCount":6,"trackCount":496,"catalogPath":"/catalogs/the-bodyguard-files.json?v=g_1791380575283_7c31609a"},"the-chosen-one":{"storyId":"the-chosen-one","sourceVersion":"b48c6869ac8c","generationId":"g_1791380589986_c7ff112c","folderCount":8,"trackCount":700,"catalogPath":"/catalogs/the-chosen-one.json?v=g_1791380589986_c7ff112c"},"the-cinderella-deal":{"storyId":"the-cinderella-deal","sourceVersion":"6c8683c98a64","generationId":"g_1791380605171_3e092fe7","folderCount":3,"trackCount":200,"catalogPath":"/catalogs/the-cinderella-deal.json?v=g_1791380605171_3e092fe7"},"the-conjurer":{"storyId":"the-conjurer","sourceVersion":"155ddbfe9b5f","generationId":"g_1791380621297_2f9d45f4","folderCount":9,"trackCount":755,"catalogPath":"/catalogs/the-conjurer.json?v=g_1791380621297_2f9d45f4"},"the-consortium-heir":{"storyId":"the-consortium-heir","sourceVersion":"04f2047a2c9e","generationId":"g_1791380636406_98397a1c","folderCount":10,"trackCount":903,"catalogPath":"/catalogs/the-consortium-heir.json?v=g_1791380636406_98397a1c"},"the-delivery-system":{"storyId":"the-delivery-system","sourceVersion":"dffa8e50b7bf","generationId":"g_1791380646999_4a47adb0","folderCount":8,"trackCount":628,"catalogPath":"/catalogs/the-delivery-system.json?v=g_1791380646999_4a47adb0"},"the-demon-cycle":{"storyId":"the-demon-cycle","sourceVersion":"a7f0ed2a2fba","generationId":"g_1791380649989_a4a11bb7","folderCount":1,"trackCount":5,"catalogPath":"/catalogs/the-demon-cycle.json?v=g_1791380649989_a4a11bb7"},"the-disintegrator":{"storyId":"the-disintegrator","sourceVersion":"f71eba0bf14d","generationId":"g_1791380663007_6c88c4d1","folderCount":10,"trackCount":898,"catalogPath":"/catalogs/the-disintegrator.json?v=g_1791380663007_6c88c4d1"},"the-doctor-s-wild-comeback":{"storyId":"the-doctor-s-wild-comeback","sourceVersion":"c535b5a71d1f","generationId":"g_1791380665414_e30a751c","folderCount":1,"trackCount":4,"catalogPath":"/catalogs/the-doctor-s-wild-comeback.json?v=g_1791380665414_e30a751c"},"the-dragon-inside-me":{"storyId":"the-dragon-inside-me","sourceVersion":"171c9a50e449","generationId":"g_1791380676299_4f6cfbf8","folderCount":9,"trackCount":787,"catalogPath":"/catalogs/the-dragon-inside-me.json?v=g_1791380676299_4f6cfbf8"},"the-duke-s-masked-bride":{"storyId":"the-duke-s-masked-bride","sourceVersion":"e99c2ab2b1a1","generationId":"g_1791380695981_baed258b","folderCount":19,"trackCount":1498,"catalogPath":"/catalogs/the-duke-s-masked-bride.json?v=g_1791380695981_baed258b"},"the-eclipse-princess":{"storyId":"the-eclipse-princess","sourceVersion":"af71599986d8","generationId":"g_1791380709280_4a14e6c9","folderCount":11,"trackCount":910,"catalogPath":"/catalogs/the-eclipse-princess.json?v=g_1791380709280_4a14e6c9"},"the-elements-within":{"storyId":"the-elements-within","sourceVersion":"9c211c8f50fe","generationId":"g_1791380714952_a4a8caaa","folderCount":4,"trackCount":220,"catalogPath":"/catalogs/the-elements-within.json?v=g_1791380714952_a4a8caaa"},"the-expelled-tech-god":{"storyId":"the-expelled-tech-god","sourceVersion":"d022b14e2a88","generationId":"g_1791380725155_b46cb5f1","folderCount":9,"trackCount":803,"catalogPath":"/catalogs/the-expelled-tech-god.json?v=g_1791380725155_b46cb5f1"},"the-future-millionaire":{"storyId":"the-future-millionaire","sourceVersion":"e29de87e2c8d","generationId":"g_1791380730434_58961de9","folderCount":3,"trackCount":150,"catalogPath":"/catalogs/the-future-millionaire.json?v=g_1791380730434_58961de9"},"the-godfather-s-son":{"storyId":"the-godfather-s-son","sourceVersion":"2375d6eae9d8","generationId":"g_1791380737535_515a8a8b","folderCount":6,"trackCount":415,"catalogPath":"/catalogs/the-godfather-s-son.json?v=g_1791380737535_515a8a8b"},"the-golden-boy":{"storyId":"the-golden-boy","sourceVersion":"e54f8a69a87a","generationId":"g_1791380761897_520a7dfc","folderCount":20,"trackCount":1813,"catalogPath":"/catalogs/the-golden-boy.json?v=g_1791380761897_520a7dfc"},"the-golden-knight":{"storyId":"the-golden-knight","sourceVersion":"6d377f32ce2e","generationId":"g_1791380770708_a7fa0d2d","folderCount":6,"trackCount":453,"catalogPath":"/catalogs/the-golden-knight.json?v=g_1791380770708_a7fa0d2d"},"the-good-seed":{"storyId":"the-good-seed","sourceVersion":"1d9f8d2523ce","generationId":"g_1791380772710_3f5f9dba","folderCount":1,"trackCount":6,"catalogPath":"/catalogs/the-good-seed.json?v=g_1791380772710_3f5f9dba"},"the-gourmet-system-chronicles":{"storyId":"the-gourmet-system-chronicles","sourceVersion":"9b212f073f21","generationId":"g_1791380785285_ddc7b92f","folderCount":9,"trackCount":800,"catalogPath":"/catalogs/the-gourmet-system-chronicles.json?v=g_1791380785285_ddc7b92f"},"the-greenback-boogie":{"storyId":"the-greenback-boogie","sourceVersion":"4663fcc9f2cd","generationId":"g_1791380800525_877b5d42","folderCount":14,"trackCount":1197,"catalogPath":"/catalogs/the-greenback-boogie.json?v=g_1791380800525_877b5d42"},"the-grim-reaper-anomaly":{"storyId":"the-grim-reaper-anomaly","sourceVersion":"fe2079769c27","generationId":"g_1791380809868_f746adae","folderCount":7,"trackCount":547,"catalogPath":"/catalogs/the-grim-reaper-anomaly.json?v=g_1791380809868_f746adae"},"the-healing-touch":{"storyId":"the-healing-touch","sourceVersion":"5ddb3cc38d4a","generationId":"g_1791380819610_353e2c15","folderCount":4,"trackCount":255,"catalogPath":"/catalogs/the-healing-touch.json?v=g_1791380819610_353e2c15"},"the-hollywood-sequel":{"storyId":"the-hollywood-sequel","sourceVersion":"c0c2bf15b3dd","generationId":"g_1791380835739_9fb5d42a","folderCount":9,"trackCount":803,"catalogPath":"/catalogs/the-hollywood-sequel.json?v=g_1791380835739_9fb5d42a"},"the-inhuman-variable":{"storyId":"the-inhuman-variable","sourceVersion":"82743b49664e","generationId":"g_1791380847060_93eac9df","folderCount":8,"trackCount":637,"catalogPath":"/catalogs/the-inhuman-variable.json?v=g_1791380847060_93eac9df"},"the-last-silver-lord":{"storyId":"the-last-silver-lord","sourceVersion":"0550b21bb529","generationId":"g_1791380849138_6dbbda6c","folderCount":1,"trackCount":4,"catalogPath":"/catalogs/the-last-silver-lord.json?v=g_1791380849138_6dbbda6c"},"the-magnificent-trillionaire-logan-smith":{"storyId":"the-magnificent-trillionaire-logan-smith","sourceVersion":"9b64901bf517","generationId":"g_1791380924494_14ac3a4d","folderCount":10,"trackCount":899,"catalogPath":"/catalogs/the-magnificent-trillionaire-logan-smith.json?v=g_1791380924494_14ac3a4d"},"the-man-they-forgot":{"storyId":"the-man-they-forgot","sourceVersion":"f190ab9cbc1f","generationId":"g_1791380931013_6acd0f24","folderCount":3,"trackCount":208,"catalogPath":"/catalogs/the-man-they-forgot.json?v=g_1791380931013_6acd0f24"},"the-martial-unity":{"storyId":"the-martial-unity","sourceVersion":"3acbf303279c","generationId":"g_1791380939302_b39b9ecc","folderCount":5,"trackCount":400,"catalogPath":"/catalogs/the-martial-unity.json?v=g_1791380939302_b39b9ecc"},"the-mech-touch":{"storyId":"the-mech-touch","sourceVersion":"b71472a3cfdc","generationId":"g_1791380956495_dcd983ed","folderCount":15,"trackCount":1311,"catalogPath":"/catalogs/the-mech-touch.json?v=g_1791380956495_dcd983ed"},"the-miracle-heiress":{"storyId":"the-miracle-heiress","sourceVersion":"4f4735086469","generationId":"g_1791380958710_e731f5ec","folderCount":1,"trackCount":10,"catalogPath":"/catalogs/the-miracle-heiress.json?v=g_1791380958710_e731f5ec"},"the-money-system":{"storyId":"the-money-system","sourceVersion":"0a9aa7662160","generationId":"g_1791380971880_c029b7f1","folderCount":9,"trackCount":786,"catalogPath":"/catalogs/the-money-system.json?v=g_1791380971880_c029b7f1"},"the-outcast-s-rise":{"storyId":"the-outcast-s-rise","sourceVersion":"da5bf0df6d49","generationId":"g_1791381010397_f76eee52","folderCount":30,"trackCount":2848,"catalogPath":"/catalogs/the-outcast-s-rise.json?v=g_1791381010397_f76eee52"},"the-primal-hunter":{"storyId":"the-primal-hunter","sourceVersion":"6b89e9379005","generationId":"g_1791381018816_7d9b475f","folderCount":3,"trackCount":200,"catalogPath":"/catalogs/the-primal-hunter.json?v=g_1791381018816_7d9b475f"},"the-rebirth-of-peter-chen":{"storyId":"the-rebirth-of-peter-chen","sourceVersion":"cfa009f21c39","generationId":"g_1791381029483_62e0633f","folderCount":8,"trackCount":616,"catalogPath":"/catalogs/the-rebirth-of-peter-chen.json?v=g_1791381029483_62e0633f"},"the-reborn-sovereign":{"storyId":"the-reborn-sovereign","sourceVersion":"c044ebe3fb82","generationId":"g_1791381031751_f053e764","folderCount":1,"trackCount":5,"catalogPath":"/catalogs/the-reborn-sovereign.json?v=g_1791381031751_f053e764"},"the-return":{"storyId":"the-return","sourceVersion":"ac15ca2f3aa5","generationId":"g_1791381049572_0a308b6a","folderCount":13,"trackCount":482,"catalogPath":"/catalogs/the-return.json?v=g_1791381049572_0a308b6a"},"the-rise-of-the-necromancer":{"storyId":"the-rise-of-the-necromancer","sourceVersion":"4965e62a5f8c","generationId":"g_1791381055536_140a3565","folderCount":3,"trackCount":131,"catalogPath":"/catalogs/the-rise-of-the-necromancer.json?v=g_1791381055536_140a3565"},"the-rising-luna":{"storyId":"the-rising-luna","sourceVersion":"f9bb09abf863","generationId":"g_1791381067956_011ba6a9","folderCount":9,"trackCount":726,"catalogPath":"/catalogs/the-rising-luna.json?v=g_1791381067956_011ba6a9"},"the-royal-accident":{"storyId":"the-royal-accident","sourceVersion":"55521f6193fd","generationId":"g_1791381089424_c028a937","folderCount":11,"trackCount":1074,"catalogPath":"/catalogs/the-royal-accident.json?v=g_1791381089424_c028a937"},"the-secret-life-of-an-accidental-heiress":{"storyId":"the-secret-life-of-an-accidental-heiress","sourceVersion":"430917425d6f","generationId":"g_1791381094437_7c79391d","folderCount":1,"trackCount":5,"catalogPath":"/catalogs/the-secret-life-of-an-accidental-heiress.json?v=g_1791381094437_7c79391d"},"the-secret-life-of-benji-price":{"storyId":"the-secret-life-of-benji-price","sourceVersion":"998a6462ecc7","generationId":"g_1791381104580_25ca9848","folderCount":2,"trackCount":100,"catalogPath":"/catalogs/the-secret-life-of-benji-price.json?v=g_1791381104580_25ca9848"},"the-secrets-of-the-moores":{"storyId":"the-secrets-of-the-moores","sourceVersion":"a44104857d69","generationId":"g_1791381118828_7b534937","folderCount":4,"trackCount":203,"catalogPath":"/catalogs/the-secrets-of-the-moores.json?v=g_1791381118828_7b534937"},"the-seventh-seal":{"storyId":"the-seventh-seal","sourceVersion":"b3d802ac9fd2","generationId":"g_1791381125687_34154ee2","folderCount":3,"trackCount":200,"catalogPath":"/catalogs/the-seventh-seal.json?v=g_1791381125687_34154ee2"},"the-silver-reign":{"storyId":"the-silver-reign","sourceVersion":"ff10ecfbd8fc","generationId":"g_1791381130925_9355bc07","folderCount":3,"trackCount":200,"catalogPath":"/catalogs/the-silver-reign.json?v=g_1791381130925_9355bc07"},"the-system-creation-intergalactic-entry":{"storyId":"the-system-creation-intergalactic-entry","sourceVersion":"9a792f7dbae0","generationId":"g_1791381139669_271dfc58","folderCount":6,"trackCount":500,"catalogPath":"/catalogs/the-system-creation-intergalactic-entry.json?v=g_1791381139669_271dfc58"},"the-tri-monster-s-curse":{"storyId":"the-tri-monster-s-curse","sourceVersion":"1e7e4f8c8370","generationId":"g_1791381152292_07b0ad6a","folderCount":8,"trackCount":695,"catalogPath":"/catalogs/the-tri-monster-s-curse.json?v=g_1791381152292_07b0ad6a"},"the-undead-army":{"storyId":"the-undead-army","sourceVersion":"541b792fa3ca","generationId":"g_1791381165529_d69a4161","folderCount":8,"trackCount":616,"catalogPath":"/catalogs/the-undead-army.json?v=g_1791381165529_d69a4161"},"the-unwanted-bride":{"storyId":"the-unwanted-bride","sourceVersion":"6c0f6bd574c9","generationId":"g_1791381167926_6ed1ce4d","folderCount":1,"trackCount":4,"catalogPath":"/catalogs/the-unwanted-bride.json?v=g_1791381167926_6ed1ce4d"},"the-vampire-prince":{"storyId":"the-vampire-prince","sourceVersion":"7d29ca5087e5","generationId":"g_1791381182764_67cd822d","folderCount":8,"trackCount":665,"catalogPath":"/catalogs/the-vampire-prince.json?v=g_1791381182764_67cd822d"},"the-wish-lord":{"storyId":"the-wish-lord","sourceVersion":"f5dec54f284d","generationId":"g_1791381200600_9bd369cd","folderCount":10,"trackCount":856,"catalogPath":"/catalogs/the-wish-lord.json?v=g_1791381200600_9bd369cd"},"the-world-s-richest-inventor":{"storyId":"the-world-s-richest-inventor","sourceVersion":"f581efaaf38b","generationId":"g_1791381207298_cc8859b7","folderCount":3,"trackCount":200,"catalogPath":"/catalogs/the-world-s-richest-inventor.json?v=g_1791381207298_cc8859b7"},"the-zombie-apocalypse-game":{"storyId":"the-zombie-apocalypse-game","sourceVersion":"27e36b3f2d7d","generationId":"g_1791381209830_dd1f4514","folderCount":1,"trackCount":10,"catalogPath":"/catalogs/the-zombie-apocalypse-game.json?v=g_1791381209830_dd1f4514"},"thorns-thrones":{"storyId":"thorns-thrones","sourceVersion":"0f6f30fb9f98","generationId":"g_1791381218140_63412f41","folderCount":7,"trackCount":6,"catalogPath":"/catalogs/thorns-thrones.json?v=g_1791381218140_63412f41"},"trading-up":{"storyId":"trading-up","sourceVersion":"b7a10faca4f8","generationId":"g_1791381232239_e01f2380","folderCount":9,"trackCount":770,"catalogPath":"/catalogs/trading-up.json?v=g_1791381232239_e01f2380"},"trillionaire-empire-game":{"storyId":"trillionaire-empire-game","sourceVersion":"2d7ce1779900","generationId":"g_1791382723118_726dc3e8","folderCount":13,"trackCount":795,"catalogPath":"/catalogs/trillionaire-empire-game.json?v=g_1791382723118_726dc3e8"},"trillionaire-sterling":{"storyId":"trillionaire-sterling","sourceVersion":"31cbedc4a63c","generationId":"g_1791381264478_87bbb0a6","folderCount":3,"trackCount":200,"catalogPath":"/catalogs/trillionaire-sterling.json?v=g_1791381264478_87bbb0a6"},"twice-upon-a-time":{"storyId":"twice-upon-a-time","sourceVersion":"95fc1f813cd2","generationId":"g_1791381285971_de99d5ca","folderCount":1,"trackCount":0,"catalogPath":"/catalogs/twice-upon-a-time.json?v=g_1791381285971_de99d5ca"},"twisted-fates":{"storyId":"twisted-fates","sourceVersion":"54346f1efc82","generationId":"g_1791382734808_1fd2e231","folderCount":9,"trackCount":800,"catalogPath":"/catalogs/twisted-fates.json?v=g_1791382734808_1fd2e231"},"twists-of-love-revenge":{"storyId":"twists-of-love-revenge","sourceVersion":"27b95e1d2057","generationId":"g_1791382750872_10caac44","folderCount":12,"trackCount":1076,"catalogPath":"/catalogs/twists-of-love-revenge.json?v=g_1791382750872_10caac44"},"unravelling-the-son-in-law":{"storyId":"unravelling-the-son-in-law","sourceVersion":"2ec6275d256b","generationId":"g_1791382414012_9394120e","folderCount":7,"trackCount":400,"catalogPath":"/catalogs/unravelling-the-son-in-law.json?v=g_1791382414012_9394120e"},"vampire-legacy":{"storyId":"vampire-legacy","sourceVersion":"318cbf001ba6","generationId":"g_1791382761924_8b1a017e","folderCount":6,"trackCount":420,"catalogPath":"/catalogs/vampire-legacy.json?v=g_1791382761924_8b1a017e"},"war-of-all-worlds":{"storyId":"war-of-all-worlds","sourceVersion":"040e5db9ea70","generationId":"g_1791381420309_48ef7094","folderCount":3,"trackCount":200,"catalogPath":"/catalogs/war-of-all-worlds.json?v=g_1791381420309_48ef7094"},"weakest-beast-tamer":{"storyId":"weakest-beast-tamer","sourceVersion":"d856f290bb2e","generationId":"g_1791381442774_8fa4b94a","folderCount":14,"trackCount":1236,"catalogPath":"/catalogs/weakest-beast-tamer.json?v=g_1791381442774_8fa4b94a"},"without-limits":{"storyId":"without-limits","sourceVersion":"feae8cbbd60b","generationId":"g_1791381452658_77c759f7","folderCount":5,"trackCount":334,"catalogPath":"/catalogs/without-limits.json?v=g_1791381452658_77c759f7"},"wolves-of-blood-moon":{"storyId":"wolves-of-blood-moon","sourceVersion":"07a9d07e4752","generationId":"g_1791381472408_6623216e","folderCount":10,"trackCount":899,"catalogPath":"/catalogs/wolves-of-blood-moon.json?v=g_1791381472408_6623216e"}};
+
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+
+    if (url.pathname === "/health") {
+      return json({
+        ok: true,
+        service: "OX Audio Player",
+        secureHandoffEnabled: Boolean(String(env.OX_HANDOFF_KEY || "").trim()),
+        streamingEnabled: true,
+        publishedCatalogs: Object.keys(CATALOG_INDEX).length
+      });
+    }
+
+    if (url.pathname === "/api/catalog-status" && request.method === "GET") {
+      const catalogs = Object.values(CATALOG_INDEX).map(item => ({
+        storyId: String(item.storyId || ""),
+        sourceVersion: String(item.sourceVersion || ""),
+        generationId: String(item.generationId || ""),
+        folderCount: Number(item.folderCount || 0),
+        trackCount: Number(item.trackCount || 0)
+      })).sort((a, b) => a.storyId.localeCompare(b.storyId));
+      return new Response(JSON.stringify({
+        ok: true,
+        service: "OX Audio Player",
+        phase: "B8.2",
+        generatedAt: new Date().toISOString(),
+        publishedCatalogs: catalogs.length,
+        catalogs
+      }), {
+        status: 200,
+        headers: {
+          ...securityHeaders(),
+          "content-type": "application/json; charset=utf-8",
+          "cache-control": "public, max-age=30, stale-while-revalidate=120"
+        }
+      });
+    }
+
+    if (url.pathname === "/favicon.ico") {
+      return new Response(null, { status: 204, headers: securityHeaders() });
+    }
+
+    if (url.pathname === "/admin/login" && request.method === "POST") return handlePlayerAdminLogin(request, env, url);
+    if (url.pathname === "/admin/logout" && request.method === "POST") return handlePlayerAdminLogout(request, env, url);
+    if (url.pathname === "/admin" && request.method === "GET") return handlePlayerAdminPage(request, env, url);
+
+    if (url.pathname === "/handoff") {
+      if (request.method !== "POST") return methodNotAllowed("POST");
+      return handleHandoff(request, env, url);
+    }
+
+    if (url.pathname === "/logout") {
+      return new Response(null, {
+        status: 303,
+        headers: {
+          ...securityHeaders(),
+          location: "/",
+          "cache-control": "no-store",
+          "set-cookie": clearSessionCookie()
+        }
+      });
+    }
+
+    if (url.pathname === "/api/audio/stream" && (request.method === "GET" || request.method === "HEAD")) {
+      return handleAudioStream(request, env, url);
+    }
+    if (url.pathname === "/api/audio/diagnose" && request.method === "GET") {
+      return handleAudioDiagnose(request, env, url);
+    }
+
+    const listenMatch = url.pathname.match(/^\/listen\/([^/]+)$/);
+    if (listenMatch && request.method === "GET") {
+      return handleListenPage(request, env, url, decodeURIComponent(listenMatch[1]));
+    }
+
+    if (url.pathname !== "/" || request.method !== "GET") {
+      return new Response("Not found", {
+        status: 404,
+        headers: { ...securityHeaders(), "content-type": "text/plain; charset=utf-8" }
+      });
+    }
+
+    return handleHome(request, env, url);
+  }
+};
+
+const PLAYER_ADMIN_COOKIE = "__Host-ox_player_admin";
+const PLAYER_ADMIN_TTL_SECONDS = 8 * 60 * 60;
+
+async function playerAdminHmac(env, text) {
+  const password = String(env.PLAYER_ADMIN_PASSWORD || "");
+  if (!password) return "";
+  const raw = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("OX_PLAYER_ADMIN_V1\0" + password));
+  const key = await crypto.subtle.importKey("raw", raw, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(String(text || "")));
+  return oxPlayerBase64UrlEncode(new Uint8Array(sig));
+}
+function constantTimeTextEqual(a, b) {
+  const x = new TextEncoder().encode(String(a || "")), y = new TextEncoder().encode(String(b || ""));
+  let diff = x.length ^ y.length; const n = Math.max(x.length, y.length);
+  for (let i = 0; i < n; i++) diff |= (x[i % Math.max(1,x.length)] || 0) ^ (y[i % Math.max(1,y.length)] || 0);
+  return diff === 0;
+}
+async function createPlayerAdminToken(env) {
+  const exp = Math.floor(Date.now()/1000) + PLAYER_ADMIN_TTL_SECONDS;
+  const payload = `v1.${exp}`;
+  return `${payload}.${await playerAdminHmac(env, payload)}`;
+}
+async function readPlayerAdmin(request, env) {
+  const password = String(env.PLAYER_ADMIN_PASSWORD || "");
+  if (!password) return false;
+  const cookie = getCookieValue(request, PLAYER_ADMIN_COOKIE);
+  const m = String(cookie || "").match(/^v1\.(\d+)\.([A-Za-z0-9_-]+)$/);
+  if (!m) return false;
+  const exp = Number(m[1] || 0); if (!Number.isFinite(exp) || exp < Math.floor(Date.now()/1000)) return false;
+  const payload = `v1.${exp}`, expected = await playerAdminHmac(env, payload);
+  return constantTimeTextEqual(m[2], expected);
+}
+function playerAdminCookie(token) {
+  return `${PLAYER_ADMIN_COOKIE}=${encodeURIComponent(token)}; Max-Age=${PLAYER_ADMIN_TTL_SECONDS}; Path=/; Secure; HttpOnly; SameSite=Strict`;
+}
+function clearPlayerAdminCookie() { return `${PLAYER_ADMIN_COOKIE}=; Max-Age=0; Path=/; Secure; HttpOnly; SameSite=Strict`; }
+function getCookieValue(request, name) {
+  const raw = String(request.headers.get("cookie") || "");
+  for (const part of raw.split(";")) { const item=part.trim(), i=item.indexOf("="); if(i>0&&item.slice(0,i)===name)return decodeURIComponent(item.slice(i+1)); }
+  return "";
+}
+async function handlePlayerAdminLogin(request, env, url) {
+  const configured = Boolean(String(env.PLAYER_ADMIN_PASSWORD || ""));
+  if (!configured) return htmlResponse(playerAdminLoginHtml("Player Admin password is not configured yet."), 503);
+  let submitted=""; try { const form=await request.formData(); submitted=String(form.get("password")||""); } catch {}
+  if (!constantTimeTextEqual(submitted, String(env.PLAYER_ADMIN_PASSWORD || ""))) return htmlResponse(playerAdminLoginHtml("Incorrect password."), 401);
+  const token = await createPlayerAdminToken(env);
+  return new Response(null,{status:303,headers:{...securityHeaders(),location:`${url.origin}/admin`,"cache-control":"no-store","set-cookie":playerAdminCookie(token)}});
+}
+async function handlePlayerAdminLogout(request, env, url) {
+  return new Response(null,{status:303,headers:{...securityHeaders(),location:`${url.origin}/admin`,"cache-control":"no-store","set-cookie":clearPlayerAdminCookie()}});
+}
+async function handlePlayerAdminPage(request, env, url) {
+  if (!(await readPlayerAdmin(request, env))) return htmlResponse(playerAdminLoginHtml(Boolean(String(env.PLAYER_ADMIN_PASSWORD||""))?"":"Player Admin password is not configured yet."), 401);
+  const catalogs = Object.values(CATALOG_INDEX);
+  const tracks = catalogs.reduce((n,x)=>n+Number(x.trackCount||0),0);
+  return htmlResponse(playerAdminDashboardHtml(catalogs.length, tracks));
+}
+function playerAdminLoginHtml(message="") {
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>OX Player Admin</title><style>${PLAYER_ADMIN_CSS}</style></head><body><main class="admin-wrap"><section class="admin-card login"><div class="admin-kicker">OX NOVELS</div><h1>Player Admin</h1><p>Sign in to manage the protected audio service.</p>${message?`<div class="admin-alert">${escapeHtml(message)}</div>`:""}<form method="post" action="/admin/login"><label>Password<input name="password" type="password" autocomplete="current-password" required autofocus></label><button type="submit">Sign in</button></form><a href="${OX_HOME}">Return to OX Novels</a></section></main></body></html>`;
+}
+function playerAdminDashboardHtml(catalogCount, trackCount) {
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>OX Player Admin</title><style>${PLAYER_ADMIN_CSS}</style></head><body><main class="admin-wrap"><header class="admin-head"><div><div class="admin-kicker">OX NOVELS · PLAYER SERVICE</div><h1>Player Admin</h1><p>B9 foundation is online. Remote catalog scanning and automatic Pacific-nightly updates are the next stage.</p></div><form method="post" action="/admin/logout"><button class="secondary">Log out</button></form></header><section class="admin-metrics"><article><span>Service</span><strong>ONLINE</strong></article><article><span>Static catalogs</span><strong>${Number(catalogCount).toLocaleString()}</strong></article><article><span>Indexed tracks</span><strong>${Number(trackCount).toLocaleString()}</strong></article><article><span>Mutable overrides</span><strong>Not enabled yet</strong></article></section><section class="admin-card"><h2>B9 rollout</h2><div class="admin-step ok">✓ Protected Player streaming baseline</div><div class="admin-step ok">✓ Remote Player Admin authentication</div><div class="admin-step">Next: KV catalog overrides</div><div class="admin-step">Next: Queue + Pacific midnight scanner</div><div class="admin-step">Next: OX ↔ Player secure library sync</div></section><section class="admin-card"><h2>Current library</h2><p>${Number(catalogCount).toLocaleString()} protected story catalogs are currently published as the static baseline.</p><a href="/">Open public Player home</a></section></main></body></html>`;
+}
+const PLAYER_ADMIN_CSS=`:root{color-scheme:light;--accent:#13c3b3;--ink:#132629;--muted:#64777a;--line:#dce7e7;--bg:#f5f8f8}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,system-ui,-apple-system,Segoe UI,sans-serif}.admin-wrap{max-width:1120px;margin:0 auto;padding:32px 18px}.admin-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:18px}.admin-head h1,.login h1{margin:5px 0 6px;font-size:30px}.admin-head p,.login p,.admin-card p{color:var(--muted)}.admin-kicker{font-size:11px;letter-spacing:.16em;font-weight:900;color:#07867e}.admin-card,.admin-metrics article{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 30px rgba(16,45,48,.05)}.admin-card{padding:20px;margin-top:14px}.login{max-width:440px;margin:10vh auto}.login form{display:grid;gap:12px;margin:18px 0}.login label{display:grid;gap:6px;font-weight:700}.login input{padding:11px;border:1px solid #cfdede;border-radius:10px}.login button,.admin-head button{border:0;border-radius:10px;padding:10px 14px;background:var(--accent);color:#fff;font-weight:800}.secondary{background:#fff!important;color:var(--ink)!important;border:1px solid var(--line)!important}.admin-alert{background:#fff2f2;border:1px solid #ffd1d1;color:#9d3d3d;padding:10px;border-radius:10px}.admin-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.admin-metrics article{padding:15px}.admin-metrics span{display:block;color:var(--muted);font-size:12px}.admin-metrics strong{display:block;margin-top:4px;font-size:20px}.admin-step{padding:10px 0;border-bottom:1px solid #edf2f2}.admin-step:last-child{border-bottom:0}.admin-step.ok{color:#087f77;font-weight:700}a{color:#087f77;font-weight:750}@media(max-width:760px){.admin-metrics{grid-template-columns:1fr 1fr}.admin-head{align-items:stretch;flex-direction:column}}`;
+
+async function handleHandoff(request, env, url) {
+  const secret = String(env.OX_HANDOFF_KEY || "").trim();
+  if (!secret) return errorPage("Secure handoff is not configured yet.", 503);
+
+  const contentType = request.headers.get("content-type") || "";
+  let token = "";
+  try {
+    if (contentType.includes("application/x-www-form-urlencoded") || contentType.includes("multipart/form-data")) {
+      const form = await request.formData();
+      token = String(form.get("token") || "");
+    } else if (contentType.includes("application/json")) {
+      const body = await request.json();
+      token = String(body?.token || "");
+    }
+  } catch {
+    return errorPage("The Listen handoff could not be read.", 400);
+  }
+
+  if (!token || token.length > 12000) return errorPage("The Listen handoff is missing or invalid.", 400);
+
+  let handoff;
+  try {
+    handoff = await decryptToken(token, secret, HANDOFF_AAD, "v1");
+  } catch {
+    return errorPage("This Listen handoff is invalid or has been altered.", 401);
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+  if (handoff?.kind !== "handoff" || handoff?.iss !== "oxnovels.top" || handoff?.aud !== "ox-player") {
+    return errorPage("This Listen handoff is not intended for OX Audio Player.", 401);
+  }
+  if (!Number.isFinite(Number(handoff.iat)) || !Number.isFinite(Number(handoff.exp)) || Number(handoff.exp) < now || Number(handoff.iat) > now + 30) {
+    return errorPage("This Listen handoff has expired. Return to OX Novels and tap Listen again.", 401);
+  }
+
+  const storyId = String(handoff.storyId || "").trim();
+  if (!storyId) return errorPage("The Listen handoff is incomplete.", 400);
+
+  const requestedSessionExp = Number(handoff.sessionExp || 0);
+  const hardMaxExp = now + 6 * 60 * 60;
+  const sessionExp = Number.isFinite(requestedSessionExp) && requestedSessionExp > now
+    ? Math.min(requestedSessionExp, hardMaxExp)
+    : hardMaxExp;
+
+  const sessionPayload = {
+    v: 1,
+    kind: "player-session",
+    iss: "ox-player",
+    aud: "ox-player",
+    storyId,
+    storyTitle: String(handoff.storyTitle || "Story").slice(0, 180),
+    storyDescription: String(handoff.storyDescription || "").slice(0, 4000),
+    storyGenre: String(handoff.storyGenre || "").slice(0, 80),
+    storyCover: safeExternalOxImage(handoff.storyCover),
+    siteName: String(handoff.siteName || "OX Novels").slice(0, 80),
+    siteLogo: safeExternalOxImage(handoff.siteLogo),
+    siteAccent: /^#[0-9a-fA-F]{6}$/.test(String(handoff.siteAccent || "")) ? String(handoff.siteAccent) : "#13c3b3",
+    displayName: String(handoff.displayName || "").slice(0, 120),
+    access: String(handoff.access || "authorized").slice(0, 40),
+    membershipStatus: String(handoff.membershipStatus || "").slice(0, 40),
+    membershipPlan: String(handoff.membershipPlan || "").slice(0, 120),
+    membershipExpiresAt: String(handoff.membershipExpiresAt || "").slice(0, 80),
+    iat: now,
+    exp: sessionExp
+  };
+
+  let sessionToken;
+  try {
+    sessionToken = await encryptToken(sessionPayload, secret, SESSION_AAD, "v1");
+  } catch {
+    return errorPage("The Player session could not be created.", 500);
+  }
+
+  return new Response(null, {
+    status: 303,
+    headers: {
+      ...securityHeaders(),
+      location: `${url.origin}/listen/${encodeURIComponent(storyId)}`,
+      "cache-control": "no-store",
+      "set-cookie": sessionCookie(sessionToken, Math.max(1, sessionExp - now))
+    }
+  });
+}
+
+async function handleListenPage(request, env, url, storyId) {
+  const session = await readPlayerSession(request, env);
+  if (!session || String(session.storyId) !== String(storyId)) return listenDeniedPage(url.hostname);
+  const catalogMeta = CATALOG_INDEX[storyId] || null;
+  return htmlResponse(listenHtml(url.hostname, session, catalogMeta));
+}
+
+async function handleHome(request, env, url) {
+  const session = await readPlayerSession(request, env);
+  return htmlResponse(homeHtml(url.hostname, Boolean(String(env.OX_HANDOFF_KEY || "").trim()), session));
+}
+
+async function resolveProtectedTrack(request, env, url) {
+  const session = await readPlayerSession(request, env);
+  if (!session) return { error: textResponse("Player session expired. Return to OX Novels and open Listen again.", 401) };
+  const trackToken = String(url.searchParams.get("track") || "").trim();
+  if (!trackToken || trackToken.length > 900) return { error: textResponse("Track is missing or invalid.", 400) };
+  const secret = String(env.OX_HANDOFF_KEY || "").trim();
+  let track;
+  try { track = await decryptToken(trackToken, secret, TRACK_AAD, "t1"); }
+  catch { return { error: textResponse("This track key is invalid or has been altered.", 401) }; }
+  const storyId = String(session.storyId || "");
+  const catalog = CATALOG_INDEX[storyId] || null;
+  if (!catalog) return { error: textResponse("This story catalog is not published on the Player yet.", 503) };
+  if (track?.kind !== "track" || String(track.storyId || "") !== storyId) return { error: textResponse("This track does not belong to this story.", 403) };
+  if (String(track.sourceVersion || "") !== String(catalog.sourceVersion || "") || String(track.generationId || "") !== String(catalog.generationId || "")) {
+    return { error: textResponse("This track belongs to an older catalog generation. Reopen the story from OX Novels.", 409) };
+  }
+  const fileId = String(track.fileId || "").trim();
+  if (!/^[A-Za-z0-9_-]{10,}$/.test(fileId)) return { error: textResponse("The protected audio source is invalid.", 400) };
+  return { session, track, storyId, catalog, fileId };
+}
+
+function preferredAudioType(track, upstreamType = "") {
+  const upstream = String(upstreamType || "").split(";")[0].trim().toLowerCase();
+  const declared = String(track?.mimeType || "").split(";")[0].trim().toLowerCase();
+  if (upstream.startsWith("audio/")) return upstream;
+  if (declared.startsWith("audio/")) return declared;
+  const name = String(track?.name || "").toLowerCase();
+  if (name.endsWith(".mp3")) return "audio/mpeg";
+  if (name.endsWith(".m4a") || name.endsWith(".m4b") || name.endsWith(".mp4")) return "audio/mp4";
+  if (name.endsWith(".aac")) return "audio/aac";
+  if (name.endsWith(".wav")) return "audio/wav";
+  if (name.endsWith(".ogg") || name.endsWith(".oga")) return "audio/ogg";
+  if (name.endsWith(".flac")) return "audio/flac";
+  return upstream || declared || "application/octet-stream";
+}
+
+function classifyDriveHtml(text = "") {
+  const value = String(text || "").toLowerCase();
+  if (value.includes("too many users have viewed or downloaded") || value.includes("download quota") || value.includes("quota exceeded")) return "drive_quota";
+  if (value.includes("sign in") || value.includes("request access") || value.includes("access denied") || value.includes("you need access")) return "drive_permission";
+  if (value.includes("virus scan") || value.includes("can't scan this file for viruses") || value.includes("cannot scan this file for viruses")) return "drive_confirmation";
+  return "drive_html";
+}
+
+const DRIVE_CONFIRM_CACHE = new Map();
+
+function decodeDriveHtml(value = "") {
+  return String(value || "")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">");
+}
+
+function driveCookieHeader(response) {
+  try {
+    const values = typeof response.headers.getSetCookie === "function"
+      ? response.headers.getSetCookie()
+      : [response.headers.get("set-cookie")].filter(Boolean);
+    return values.map(value => String(value || "").split(";", 1)[0]).filter(Boolean).join("; ");
+  } catch {
+    return "";
+  }
+}
+
+function parseHtmlAttributes(tag = "") {
+  const attrs = {};
+  const re = /([A-Za-z_:][-A-Za-z0-9_:.]*)\s*=\s*(["'])(.*?)\2/g;
+  let match;
+  while ((match = re.exec(String(tag || "")))) attrs[String(match[1] || "").toLowerCase()] = decodeDriveHtml(match[3] || "");
+  return attrs;
+}
+
+function extractDriveConfirmation(html = "", fileId = "") {
+  const text = String(html || "");
+  const forms = text.match(/<form\b[^>]*>/gi) || [];
+  let action = "";
+  for (const form of forms) {
+    const attrs = parseHtmlAttributes(form);
+    const candidate = String(attrs.action || "");
+    if (/^https:\/\/(?:drive\.usercontent\.google\.com|drive\.google\.com)\//i.test(candidate)) {
+      action = candidate;
+      break;
+    }
+  }
+  if (!action) {
+    const href = text.match(/https:\/\/(?:drive\.usercontent\.google\.com|drive\.google\.com)\/download\?[^"'<>\s]+/i);
+    if (href) action = decodeDriveHtml(href[0]);
+  }
+  if (!action) return null;
+
+  let target;
+  try { target = new URL(decodeDriveHtml(action)); } catch { return null; }
+  if (!/^(?:drive\.usercontent\.google\.com|drive\.google\.com)$/i.test(target.hostname)) return null;
+
+  const inputs = text.match(/<input\b[^>]*>/gi) || [];
+  for (const input of inputs) {
+    const attrs = parseHtmlAttributes(input);
+    const name = String(attrs.name || "");
+    if (!name || !("value" in attrs)) continue;
+    if (["id", "export", "confirm", "uuid", "authuser", "at"].includes(name)) target.searchParams.set(name, attrs.value);
+  }
+  if (!target.searchParams.get("id") && fileId) target.searchParams.set("id", fileId);
+  if (!target.searchParams.get("export")) target.searchParams.set("export", "download");
+  return target.toString();
+}
+
+function driveResponseReason(response, range = "", bodyText = "") {
+  const type = String(response?.headers?.get("content-type") || "").toLowerCase();
+  const contentRange = String(response?.headers?.get("content-range") || "");
+  if (type.includes("text/html")) return classifyDriveHtml(bodyText);
+  if (response.status === 429) return "drive_rate_limit";
+  if (response.status === 403) return "drive_forbidden";
+  if (response.status === 404) return "drive_not_found";
+  if (response.status >= 500) return "drive_server_error";
+  if (range && response.status !== 206) return "range_not_honored";
+  if (range && !/^bytes\s+\d+-\d+\/\d+$/i.test(contentRange)) return "invalid_content_range";
+  if (!(response.ok || response.status === 206)) return "drive_http_" + response.status;
+  return "";
+}
+
+async function driveFetchOnce(target, range = "", cookie = "") {
+  const headers = new Headers({ "user-agent": "OX-Audio-Player-B6.5/1.0", "accept": "*/*" });
+  if (range) headers.set("range", range);
+  if (cookie) headers.set("cookie", cookie);
+  return fetch(target, { method: "GET", redirect: "follow", headers });
+}
+
+async function evaluateDriveResponse(response, { fileId, range, candidate, diagnostics, allowConfirmation = true }) {
+  const type = String(response.headers.get("content-type") || "").toLowerCase();
+  const contentRange = String(response.headers.get("content-range") || "");
+  if (!type.includes("text/html")) {
+    const reason = driveResponseReason(response, range, "");
+    diagnostics.push({ candidate, status: response.status, type: type.slice(0, 120), contentRange: contentRange.slice(0, 120), reason: reason || "ok" });
+    if (!reason && response.body) return { response, candidate };
+    try { await response.body?.cancel(); } catch {}
+    const error = new Error(reason || "Drive source unavailable");
+    error.reason = reason;
+    throw error;
+  }
+
+  let html = "";
+  try { html = (await response.text()).slice(0, 20000); } catch {}
+  const initialReason = classifyDriveHtml(html);
+  if (allowConfirmation && (initialReason === "drive_confirmation" || initialReason === "drive_html")) {
+    const confirmedTarget = extractDriveConfirmation(html, fileId);
+    if (confirmedTarget) {
+      const cookie = driveCookieHeader(response);
+      DRIVE_CONFIRM_CACHE.set(fileId, { url: confirmedTarget, cookie, expiresAt: Date.now() + 8 * 60 * 1000 });
+      let confirmed;
+      try { confirmed = await driveFetchOnce(confirmedTarget, range, cookie); }
+      catch (error) {
+        diagnostics.push({ candidate: candidate + "c", status: 0, type: "", contentRange: "", reason: "network_error" });
+        throw error;
+      }
+      const confirmedType = String(confirmed.headers.get("content-type") || "").toLowerCase();
+      const confirmedRange = String(confirmed.headers.get("content-range") || "");
+      let confirmedHtml = "";
+      if (confirmedType.includes("text/html")) {
+        try { confirmedHtml = (await confirmed.text()).slice(0, 12000); } catch {}
+      }
+      const confirmedReason = driveResponseReason(confirmed, range, confirmedHtml);
+      diagnostics.push({ candidate: candidate + "c", status: confirmed.status, type: confirmedType.slice(0, 120), contentRange: confirmedRange.slice(0, 120), reason: confirmedReason || "ok" });
+      if (!confirmedReason && confirmed.body) return { response: confirmed, candidate: candidate + "c" };
+      try { await confirmed.body?.cancel(); } catch {}
+      DRIVE_CONFIRM_CACHE.delete(fileId);
+      const error = new Error(confirmedReason || "Drive confirmation failed");
+      error.reason = confirmedReason;
+      throw error;
+    }
+  }
+
+  diagnostics.push({ candidate, status: response.status, type: type.slice(0, 120), contentRange: contentRange.slice(0, 120), reason: initialReason || "drive_html" });
+  const error = new Error(initialReason || "Drive HTML response");
+  error.reason = initialReason || "drive_html";
+  throw error;
+}
+
+async function fetchDriveAudio(fileId, range = "") {
+  const id = encodeURIComponent(fileId);
+  const diagnostics = [];
+  let lastError = null;
+
+  const cached = DRIVE_CONFIRM_CACHE.get(fileId);
+  if (cached && Number(cached.expiresAt || 0) > Date.now()) {
+    try {
+      const response = await driveFetchOnce(cached.url, range, cached.cookie || "");
+      const result = await evaluateDriveResponse(response, { fileId, range, candidate: "cache", diagnostics, allowConfirmation: false });
+      return { ...result, diagnostics };
+    } catch (error) {
+      DRIVE_CONFIRM_CACHE.delete(fileId);
+      lastError = error;
+    }
+  } else if (cached) {
+    DRIVE_CONFIRM_CACHE.delete(fileId);
+  }
+
+  const candidates = [
+    "https://drive.usercontent.google.com/download?id=" + id + "&export=download&confirm=t",
+    "https://drive.google.com/uc?export=download&id=" + id + "&confirm=t"
+  ];
+
+  for (let i = 0; i < candidates.length; i++) {
+    const target = candidates[i];
+    try {
+      let response;
+      try {
+        response = await driveFetchOnce(target, range);
+      } catch (error) {
+        await new Promise(resolve => setTimeout(resolve, 300));
+        response = await driveFetchOnce(target, range);
+      }
+      const result = await evaluateDriveResponse(response, { fileId, range, candidate: i + 1, diagnostics, allowConfirmation: true });
+      return { ...result, diagnostics };
+    } catch (error) {
+      lastError = error;
+      if (["drive_server_error", "network_error"].includes(String(error?.reason || ""))) {
+        await new Promise(resolve => setTimeout(resolve, 450));
+      }
+    }
+  }
+
+  const error = lastError || new Error("Drive source unavailable");
+  error.driveDiagnostics = diagnostics;
+  throw error;
+}
+
+// OX_B65_RANGE_CONFIRMATION_FIX
+
+async function handleAudioStream(request, env, url) {
+  const resolved = await resolveProtectedTrack(request, env, url);
+  if (resolved.error) return resolved.error;
+  const { track, fileId } = resolved;
+  const range = String(request.headers.get("range") || "").trim();
+  if (range && !/^bytes=\d*-\d*$/.test(range)) {
+    return new Response("Only a single byte range is supported.", {
+      status: 416,
+      headers: { ...securityHeaders(), "content-type": "text/plain; charset=utf-8", "cache-control": "no-store", "accept-ranges": "bytes" }
+    });
+  }
+  try {
+    const fetched = await fetchDriveAudio(fileId, range);
+    const upstream = fetched.response;
+    const headers = new Headers();
+    headers.set("content-type", preferredAudioType(track, upstream.headers.get("content-type")));
+    headers.set("cache-control", "private, no-store");
+    headers.set("accept-ranges", "bytes");
+    headers.set("referrer-policy", "no-referrer");
+    headers.set("x-ox-player-stream", "b6.5-range-confirmation-stream");
+    headers.set("x-ox-drive-candidate", String(fetched.candidate || 0));
+    headers.set("x-ox-range-mode", range ? "validated-206" : "full");
+    for (const name of ["content-length", "content-range", "etag", "last-modified"]) {
+      const value = upstream.headers.get(name);
+      if (value) headers.set(name, value);
+    }
+    if (request.method === "HEAD") {
+      try { await upstream.body?.cancel(); } catch {}
+      return new Response(null, { status: upstream.status === 206 ? 206 : 200, headers });
+    }
+    return new Response(upstream.body, { status: upstream.status === 206 ? 206 : 200, headers });
+  } catch (error) {
+    const last = Array.isArray(error?.driveDiagnostics) ? error.driveDiagnostics.at(-1) : null;
+    const headers = { ...securityHeaders(), "content-type": "text/plain; charset=utf-8", "cache-control": "no-store", "accept-ranges": "bytes" };
+    if (last?.reason) headers["x-ox-drive-reason"] = String(last.reason).slice(0, 80);
+    if (last?.status) headers["x-ox-drive-status"] = String(last.status);
+    return new Response("The protected Drive audio source is temporarily unavailable.", { status: 502, headers });
+  }
+}
+
+async function handleAudioDiagnose(request, env, url) {
+  const resolved = await resolveProtectedTrack(request, env, url);
+  if (resolved.error) return resolved.error;
+  const { track, fileId } = resolved;
+  try {
+    const fetched = await fetchDriveAudio(fileId, "bytes=0-1");
+    const upstream = fetched.response;
+    const result = {
+      ok: true,
+      status: upstream.status,
+      contentType: preferredAudioType(track, upstream.headers.get("content-type")),
+      contentRange: String(upstream.headers.get("content-range") || ""),
+      candidate: fetched.candidate || 0,
+      reason: "ok"
+    };
+    try { await upstream.body?.cancel(); } catch {}
+    return json(result);
+  } catch (error) {
+    const diagnostics = Array.isArray(error?.driveDiagnostics) ? error.driveDiagnostics : [];
+    const last = diagnostics.at(-1) || {};
+    return json({
+      ok: false,
+      status: Number(last.status || 0),
+      contentType: String(last.type || ""),
+      contentRange: String(last.contentRange || ""),
+      candidate: Number(last.candidate || 0),
+      reason: String(last.reason || "drive_unavailable")
+    }, 200);
+  }
+}
+
+// OX_B64_STREAM_DIAGNOSTICS
+
+async function readPlayerSession(request, env) {
+  const secret = String(env.OX_HANDOFF_KEY || "").trim();
+  const token = getCookie(request, PLAYER_COOKIE);
+  if (!secret || !token) return null;
+  try {
+    const session = await decryptToken(token, secret, SESSION_AAD, "v1");
+    const now = Math.floor(Date.now() / 1000);
+    if (session?.kind !== "player-session" || session?.iss !== "ox-player" || session?.aud !== "ox-player") return null;
+    if (!Number.isFinite(Number(session.exp)) || Number(session.exp) <= now) return null;
+    return session;
+  } catch {
+    return null;
+  }
+}
+
+function safeExternalOxImage(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  try {
+    const url = new URL(raw, OX_HOME);
+    if (url.protocol !== "https:" || url.hostname !== "oxnovels.top") return "";
+    return url.href.slice(0, 1400);
+  } catch {
+    return "";
+  }
+}
+
+async function encryptToken(payload, secret, aadText, prefix) {
+  const key = await importAesKey(secret, ["encrypt"]);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const data = new TextEncoder().encode(JSON.stringify(payload));
+  const aad = new TextEncoder().encode(aadText);
+  const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv, additionalData: aad, tagLength: 128 }, key, data);
+  return `${prefix}.${base64UrlEncode(iv)}.${base64UrlEncode(new Uint8Array(encrypted))}`;
+}
+
+async function decryptToken(token, secret, aadText, prefix) {
+  const parts = String(token || "").split(".");
+  if (parts.length !== 3 || parts[0] !== prefix) throw new Error("Bad token format");
+  const iv = base64UrlDecode(parts[1]);
+  const encrypted = base64UrlDecode(parts[2]);
+  if (iv.byteLength !== 12 || encrypted.byteLength < 17) throw new Error("Bad token data");
+  const key = await importAesKey(secret, ["decrypt"]);
+  const aad = new TextEncoder().encode(aadText);
+  const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv, additionalData: aad, tagLength: 128 }, key, encrypted);
+  return JSON.parse(new TextDecoder().decode(plain));
+}
+
+async function importAesKey(secret, usages) {
+  const raw = base64UrlDecode(secret);
+  if (raw.byteLength !== 32) throw new Error("OX_HANDOFF_KEY must decode to exactly 32 bytes");
+  return crypto.subtle.importKey("raw", raw, { name: "AES-GCM" }, false, usages);
+}
+
+function base64UrlEncode(bytes) {
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+function base64UrlDecode(value) {
+  const normalized = String(value || "").replace(/-/g, "+").replace(/_/g, "/");
+  const padded = normalized + "=".repeat((4 - normalized.length % 4) % 4);
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+function getCookie(request, name) {
+  const header = request.headers.get("cookie") || "";
+  for (const part of header.split(";")) {
+    const item = part.trim();
+    const index = item.indexOf("=");
+    if (index < 0) continue;
+    if (item.slice(0, index) === name) return decodeURIComponent(item.slice(index + 1));
+  }
+  return "";
+}
+
+function sessionCookie(value, maxAge) {
+  return `${PLAYER_COOKIE}=${encodeURIComponent(value)}; Path=/; Max-Age=${Math.max(1, Math.floor(maxAge))}; HttpOnly; Secure; SameSite=Lax`;
+}
+function clearSessionCookie() {
+  return `${PLAYER_COOKIE}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax`;
+}
+
+function htmlResponse(body, status = 200) {
+  return new Response(body, {
+    status,
+    headers: { ...securityHeaders(), "content-type": "text/html; charset=utf-8", "cache-control": "no-store" }
+  });
+}
+function json(value, status = 200) {
+  return new Response(JSON.stringify(value, null, 2), {
+    status,
+    headers: { ...securityHeaders(), "content-type": "application/json; charset=utf-8", "cache-control": "no-store" }
+  });
+}
+function textResponse(text, status = 200) {
+  return new Response(text, {
+    status,
+    headers: { ...securityHeaders(), "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" }
+  });
+}
+function methodNotAllowed(method) {
+  return new Response("Method not allowed", { status: 405, headers: { ...securityHeaders(), allow: method } });
+}
+function securityHeaders() {
+  return {
+    "x-content-type-options": "nosniff",
+    "referrer-policy": "no-referrer",
+    "permissions-policy": "camera=(), microphone=(), geolocation=()",
+    "x-frame-options": "DENY",
+    "content-security-policy": "default-src 'none'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data: https://oxnovels.top; connect-src 'self'; media-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
+  };
+}
+function errorPage(message, status) {
+  return htmlResponse(simplePage("Secure Player unavailable", message, true), status);
+}
+function listenDeniedPage(hostname) {
+  return htmlResponse(simplePage("A valid listening session is required", "Open this story from OX Novels to start protected playback.", true, hostname), 401);
+}
+
+function homeHtml(hostname, handoffConfigured, session) {
+  return pageShell(hostname, `
+    <section class="hero">
+      <div class="eyebrow">OX NOVELS · PROTECTED AUDIO</div>
+      <h1>Protected Audio Player</h1>
+      <p>This service provides secure audio playback for OX Novels customers. Open a story from OX Novels to begin listening.</p>
+      <p><a class="primary-link" href="${OX_HOME}">Go to OX Novels</a>${session ? ` <a class="primary-link" href="/listen/${encodeURIComponent(session.storyId)}">Continue current session</a>` : ""}</p>
+    </section>
+  `, session);
+}
+
+function listenHtml(hostname, session, catalogMeta) {
+  if (!catalogMeta) {
+    return pageShell(hostname, `
+      <section class="hero warn"><div class="eyebrow">OX LISTEN · CATALOG NOT PUBLISHED</div><h1>${escapeHtml(session.storyTitle || "Story")}</h1><p>Your authorization is valid, but this Player build does not contain this story's prepared catalog yet. Publish the latest catalog build and reopen the story.</p></section>
+      <section class="panel"><a class="primary-link" href="${OX_HOME}">Return to OX Novels</a></section>
+    `, session);
+  }
+
+  const boot = {
+    storyId: String(catalogMeta.storyId || session.storyId || ""),
+    catalogPath: String(catalogMeta.catalogPath || ""),
+    sourceVersion: String(catalogMeta.sourceVersion || ""),
+    generationId: String(catalogMeta.generationId || ""),
+    storyTitle: String(session.storyTitle || catalogMeta.storyId || "Story")
+  };
+  const safeBootJson = safeScriptJson(JSON.stringify(boot));
+  const cover = session.storyCover
+    ? `<img class="story-cover" src="${escapeHtml(session.storyCover)}" alt="${escapeHtml(session.storyTitle || "Story")} cover" referrerpolicy="no-referrer">`
+    : `<div class="story-mark">OX</div>`;
+  const description = session.storyDescription ? `<p class="story-description">${escapeHtml(session.storyDescription)}</p>` : "";
+  const genre = session.storyGenre ? `<span class="genre-pill">${escapeHtml(session.storyGenre)}</span>` : "";
+
+  return pageShell(hostname, `
+    <section class="story-card">
+      ${cover}
+      <div class="story-copy">
+        <div class="eyebrow">OX LISTEN · SECURE SESSION</div>
+        <h1>${escapeHtml(session.storyTitle || catalogMeta.storyId)}</h1>
+        ${description}
+        <div class="story-meta">${genre}<span>${Number(catalogMeta.folderCount || 0)} folders</span><span>${Number(catalogMeta.trackCount || 0)} audio tracks</span></div>
+      </div>
+      <button id="continueButton" class="continue" hidden type="button"></button>
+    </section>
+
+    <section class="panel browser-panel">
+      <div class="browser-head"><div><div class="eyebrow">STORY CONTENTS</div><h2>Folders and audio files</h2></div><button id="folderBack" class="soft" hidden type="button">← Back</button></div>
+      <div id="catalogLoading" class="catalog-loading">Loading story contents…</div>
+      <div id="breadcrumbs" class="breadcrumbs"></div>
+      <div id="browser" class="browser"></div>
+    </section>
+
+    <section class="foot-note">Protected playback by OX Novels.</section>
+
+    <div id="playerSheet" class="player-sheet" hidden>
+      <div class="player-top"><div><strong id="playerStory">${escapeHtml(session.storyTitle || "OX Novels")}</strong><span id="playerTrack">Audio</span></div><div class="top-actions"><button id="minimizePlayer" class="icon-btn" type="button" aria-label="Minimize player">⌄</button><button id="closePlayer" class="icon-btn" type="button" aria-label="Close player">×</button></div></div>
+      <div id="playerError" class="player-error" hidden><span id="playerErrorText"></span><button id="retryButton" type="button">Retry</button></div>
+      <div id="buffering" class="buffering" hidden>Buffering…</div>
+      <div class="time-row"><span id="currentTime">0:00</span><input id="seek" type="range" min="0" max="1000" value="0"><span id="duration">0:00</span></div>
+      <div class="transport"><button id="previousButton" type="button">⏮</button><button id="backButton" type="button">↶<small>10</small></button><button id="playButton" class="play" type="button">▶</button><button id="forwardButton" type="button">↷<small>10</small></button><button id="nextButton" type="button">⏭</button></div>
+      <div class="player-options">
+        <label>Speed<select id="speedSelect"><option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="1.75">1.75×</option><option value="2">2×</option></select></label>
+        <label>Sleep timer<select id="sleepSelect"><option value="off">Off</option><option value="15">15 min</option><option value="30">30 min</option><option value="45">45 min</option><option value="60">60 min</option><option value="episode">End of episode</option></select></label>
+        <label>Volume<div class="volume-row"><input id="volume" type="range" min="0" max="1" step="0.01" value="1"><button id="muteButton" type="button">Mute</button></div></label>
+      </div>
+      <audio id="audioEngine" preload="none"></audio>
+    </div>
+
+    <div id="miniPlayer" class="mini-player" hidden><button id="expandPlayer" class="mini-copy" type="button"><strong id="miniTrack">Audio</strong><span id="miniTime">0:00</span></button><button id="miniPlay" class="mini-play" type="button">▶</button></div>
+
+    <script id="oxBoot" type="application/json">${safeBootJson}</script>
+    <script>${PLAYER_JS}</script>
+  `, session);
+}
+
+const PLAYER_JS = String.raw`(async () => {
+  const boot = JSON.parse(document.getElementById('oxBoot').textContent || '{}');
+  const storyId = String(boot.storyId || '');
+  let catalog = null;
+  const $ = id => document.getElementById(id);
+  const els = {
+    browser:$('browser'), breadcrumbs:$('breadcrumbs'), folderBack:$('folderBack'), continueButton:$('continueButton'), catalogLoading:$('catalogLoading'),
+    playerSheet:$('playerSheet'), playerStory:$('playerStory'), playerTrack:$('playerTrack'), playerError:$('playerError'), playerErrorText:$('playerErrorText'), retryButton:$('retryButton'), buffering:$('buffering'),
+    currentTime:$('currentTime'), duration:$('duration'), seek:$('seek'), previousButton:$('previousButton'), nextButton:$('nextButton'), backButton:$('backButton'), forwardButton:$('forwardButton'), playButton:$('playButton'),
+    speedSelect:$('speedSelect'), sleepSelect:$('sleepSelect'), volume:$('volume'), muteButton:$('muteButton'), minimizePlayer:$('minimizePlayer'), closePlayer:$('closePlayer'), audio:$('audioEngine'),
+    miniPlayer:$('miniPlayer'), miniTrack:$('miniTrack'), miniTime:$('miniTime'), miniPlay:$('miniPlay'), expandPlayer:$('expandPlayer')
+  };
+  let path = [];
+  let active = null;
+  let sleepTimer = null;
+  let stopAtEpisodeEnd = false;
+  let isSeeking = false;
+  let lastSavedSecond = -1;
+  let minimizedByUser = false;
+  let sourceGeneration = 0;
+  // OX_B63_BUFFER_GUARD: serialize source changes and suppress stale media errors.
+  let startSequence = 0;
+  let sourceBusy = false;
+  let suppressMediaErrorsUntil = 0;
+  let failureCheckInFlight = false;
+  const automaticRetries = new Map();
+  const SPEED_KEY = 'ox-player-speed-v1';
+  const PROGRESS_KEY = 'ox-player-progress-v1:' + storyId;
+  const trackMap = new Map();
+  try {
+    const response = await fetch(String(boot.catalogPath || ''), { cache: 'force-cache', credentials: 'omit' });
+    if (!response.ok) throw new Error('Catalog request failed with ' + response.status);
+    catalog = await response.json();
+    if (!catalog || String(catalog.storyId || '') !== storyId) throw new Error('Catalog story mismatch');
+    if (String(catalog.sourceVersion || '') !== String(boot.sourceVersion || '') || String(catalog.generationId || '') !== String(boot.generationId || '')) {
+      throw new Error('Catalog generation mismatch');
+    }
+    if (!catalog.rootKey || !catalog.folders?.[catalog.rootKey]) throw new Error('Catalog root folder is missing');
+    path = [catalog.rootKey];
+    els.catalogLoading.hidden = true;
+  } catch (error) {
+    els.catalogLoading.textContent = 'Story contents could not load. Return to OX Novels and open Listen again.';
+    els.catalogLoading.classList.add('is-error');
+    console.error('OX Player catalog load failed', error);
+    return;
+  }
+  for (const folder of Object.values(catalog.folders || {})) for (const track of (folder.tracks || [])) trackMap.set(track.key, track);
+
+  function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+  function fmtTime(value){const s=Number.isFinite(value)&&value>0?Math.floor(value):0,h=Math.floor(s/3600),m=Math.floor((s%3600)/60),x=s%60;return h?h+':'+String(m).padStart(2,'0')+':'+String(x).padStart(2,'0'):m+':'+String(x).padStart(2,'0');}
+  function fmtBytes(value){let b=Number(value||0),u=['B','KB','MB','GB'],i=0;if(!Number.isFinite(b)||b<=0)return'';while(b>=1024&&i<u.length-1){b/=1024;i++;}return (b>=100||i===0?Math.round(b):b.toFixed(1))+' '+u[i];}
+  function loadProgress(){try{return JSON.parse(localStorage.getItem(PROGRESS_KEY)||'{}')}catch{return{}}}
+  function saveProgress(extra={}){const old=loadProgress();localStorage.setItem(PROGRESS_KEY,JSON.stringify({...old,...extra,updatedAt:Date.now()}));refreshContinue();}
+  function refreshContinue(){const s=loadProgress();if(!s.trackKey||!(Number(s.position)>1)||!trackMap.has(s.trackKey)){els.continueButton.hidden=true;return;}els.continueButton.hidden=false;els.continueButton.textContent='Continue '+(s.trackName||'Listening')+' · '+fmtTime(Number(s.position)||0);}
+  function currentFolder(){return catalog.folders?.[path[path.length-1]]||null;}
+  function render(){const folder=currentFolder();if(!folder){els.browser.innerHTML='<div class="empty">Folder unavailable.</div>';return;}els.breadcrumbs.innerHTML=path.map((key,i)=>'<button type="button" data-crumb="'+i+'">'+esc(catalog.folders[key]?.name||'Folder')+'</button>'+(i<path.length-1?'<span>›</span>':'')).join('');els.folderBack.hidden=path.length<=1;const rows=[];for(const child of folder.folders||[])rows.push('<button class="browser-row" type="button" data-folder="'+esc(child.key)+'"><span class="row-icon">▰</span><span class="row-copy"><strong>'+esc(child.name)+'</strong><span>Folder</span></span><span class="row-action">Open</span></button>');for(const t of folder.tracks||[]){const d=[t.mimeType,fmtBytes(t.size)].filter(Boolean).join(' · ');rows.push('<button class="browser-row" type="button" data-track="'+esc(t.key)+'"><span class="row-icon">▶</span><span class="row-copy"><strong>'+esc(t.name)+'</strong><span>'+esc(d)+'</span></span><span class="row-action">Play</span></button>');}els.browser.innerHTML=rows.join('')||'<div class="empty">No folders or recognized audio files were found here.</div>';}
+  function showPlayer(){minimizedByUser=false;els.playerSheet.hidden=false;els.miniPlayer.hidden=true;}
+  function minimize(){if(!active)return;minimizedByUser=true;els.playerSheet.hidden=true;els.miniPlayer.hidden=false;}
+  function closePlayer(){startSequence++;sourceGeneration++;minimizedByUser=false;sourceBusy=false;els.audio.pause();els.audio.removeAttribute('src');els.audio.load();active=null;els.playerSheet.hidden=true;els.miniPlayer.hidden=true;clearError();els.buffering.hidden=true;setSourceBusy(false);}
+  function clearError(){els.playerError.hidden=true;}
+  function showError(text){els.playerErrorText.textContent=text;els.playerError.hidden=false;els.buffering.hidden=true;setSourceBusy(false);}
+  function updateButtons(){if(sourceBusy){els.playButton.textContent='';els.miniPlay.textContent='';els.playButton.classList.add('is-loading');els.miniPlay.classList.add('is-loading');return;}els.playButton.classList.remove('is-loading');els.miniPlay.classList.remove('is-loading');const playing=!els.audio.paused&&!els.audio.ended;els.playButton.textContent=playing?'❚❚':'▶';els.miniPlay.textContent=playing?'❚❚':'▶';}
+  function setSourceBusy(value){sourceBusy=Boolean(value);els.buffering.hidden=true;els.playerSheet.setAttribute('aria-busy',sourceBusy?'true':'false');for(const control of els.playerSheet.querySelectorAll('button,input,select')){if(control===els.minimizePlayer||control===els.closePlayer)continue;control.disabled=sourceBusy;}els.continueButton.disabled=sourceBusy;els.continueButton.setAttribute('aria-disabled',sourceBusy?'true':'false');els.folderBack.disabled=sourceBusy;for(const button of els.breadcrumbs.querySelectorAll('button'))button.disabled=sourceBusy;for(const button of els.browser.querySelectorAll('button'))button.disabled=sourceBusy;updateButtons();}
+  function friendlyPlaybackError(error){if(error?.name==='NotAllowedError')return 'Playback was blocked by the browser. Press Play again.';return 'This audio source could not start. The Player is checking the Drive response…';}
+  function driveFailureMessage(reason){if(reason==='drive_quota'||reason==='drive_rate_limit')return 'Google Drive is temporarily limiting this audio file. Repeated Retry clicks will not help; please wait and try again later.';if(reason==='drive_permission'||reason==='drive_forbidden')return 'Google Drive is refusing access to this audio file. The source permissions need to be checked.';if(reason==='drive_not_found')return 'This audio file is no longer available in Google Drive.';if(reason==='range_not_honored'||reason==='invalid_content_range')return 'Google Drive did not return the byte range required for reliable audio playback. Please try again shortly.';if(reason==='drive_confirmation'||reason==='drive_html')return 'Google Drive returned a download page instead of audio bytes. Please try again later.';if(reason==='drive_server_error'||reason==='network_error')return 'The Drive audio source is temporarily unavailable. Please try again shortly.';return 'This episode could not be streamed right now. Please try again shortly.';}
+  async function diagnoseAndRecover(track,position,sequence){if(failureCheckInFlight||!track?.key)return;failureCheckInFlight=true;setSourceBusy(true);try{const response=await fetch('/api/audio/diagnose?track='+encodeURIComponent(track.key)+'&check='+Date.now(),{cache:'no-store'});const info=await response.json().catch(()=>({ok:false,reason:'diagnostic_failed'}));if(sequence!==startSequence||active?.key!==track.key)return;if(info?.ok===true){const count=Number(automaticRetries.get(track.key)||0);if(count<1){automaticRetries.set(track.key,count+1);setSourceBusy(false);await new Promise(r=>setTimeout(r,650));if(sequence===startSequence&&active?.key===track.key)start(track,position,{force:true,automatic:true});return;}showError('Drive returned a valid audio range, but the browser still could not start this file. Close the player once and reopen the story.');return;}showError(driveFailureMessage(String(info?.reason||'')));}catch{if(sequence===startSequence&&active?.key===track.key)showError('The Player could not verify the Drive audio source. Please try again shortly.');}finally{failureCheckInFlight=false;}}
+  function jump(sec){if(Number.isFinite(els.audio.duration))els.audio.currentTime=Math.max(0,Math.min(els.audio.duration,els.audio.currentTime+sec));}
+  function setSleep(value){if(sleepTimer)clearTimeout(sleepTimer);sleepTimer=null;stopAtEpisodeEnd=value==='episode';const m=Number(value);if(Number.isFinite(m)&&m>0)sleepTimer=setTimeout(()=>{els.audio.pause();els.sleepSelect.value='off';sleepTimer=null;},m*60000);}
+  function configureMedia(t){if(!('mediaSession'in navigator)||!t)return;try{navigator.mediaSession.metadata=new MediaMetadata({title:t.name,artist:'OX Novels',album:document.title});}catch{}}
+  async function safePlay(sequence=startSequence){try{await els.audio.play();if(sequence!==startSequence)return false;return true;}catch(e){if(sequence!==startSequence||e?.name==='AbortError')return false;throw e;}}
+  function applySource(url,resume=null){sourceGeneration++;const generation=sourceGeneration;clearError();suppressMediaErrorsUntil=performance.now()+400;els.audio.pause();els.audio.removeAttribute('src');els.audio.load();els.audio.src=url;els.audio.playbackRate=Number(els.speedSelect.value)||1;if(resume!==null){const fn=()=>{if(generation!==sourceGeneration)return;if(Number.isFinite(els.audio.duration))els.audio.currentTime=Math.min(Number(resume)||0,Math.max(0,els.audio.duration-.25));els.audio.removeEventListener('loadedmetadata',fn);};if(els.audio.readyState>=1)fn();else els.audio.addEventListener('loadedmetadata',fn);}return generation;}
+  async function start(track,resume=0,options={}){const force=options?.force===true;if(!track?.key||(!force&&sourceBusy))return;const sequence=++startSequence;clearError();showPlayer();active=track;els.playerTrack.textContent=track.name||'Audio';els.miniTrack.textContent=track.name||'Audio';configureMedia(track);setSourceBusy(true);const streamUrl='/api/audio/stream?track='+encodeURIComponent(track.key)+'&play='+encodeURIComponent(String(Date.now())+'-'+sequence);const generation=applySource(streamUrl,resume);try{const started=await safePlay(sequence);if(sequence!==startSequence||generation!==sourceGeneration)return;if(!started&&els.audio.paused){if(options?.automatic===true)showError('This episode still could not start after an automatic retry.');else diagnoseAndRecover(track,Number(resume)||0,sequence);}}catch(e){if(sequence!==startSequence||generation!==sourceGeneration)return;if(e?.name==='NotAllowedError'){showError(friendlyPlaybackError(e));return;}diagnoseAndRecover(track,Number(resume)||0,sequence);}}
+  async function playNeighbor(kind){if(!active)return;const key=kind==='previous'?active.previousKey:active.nextKey;if(!key)return;const t=trackMap.get(key);if(t)await start(t,0);}
+  els.browser.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.folder){path.push(b.dataset.folder);render();return;}if(b.dataset.track){const t=trackMap.get(b.dataset.track);if(t)start(t,0);}});
+  els.folderBack.addEventListener('click',()=>{if(path.length>1){path.pop();render();}});
+  els.breadcrumbs.addEventListener('click',e=>{const b=e.target.closest('[data-crumb]');if(!b)return;const i=Number(b.dataset.crumb);if(Number.isInteger(i)&&i>=0&&i<path.length){path=path.slice(0,i+1);render();}});
+  els.continueButton.addEventListener('click',()=>{if(sourceBusy)return;const s=loadProgress(),t=trackMap.get(s.trackKey);if(t)start(t,Number(s.position)||0);else{localStorage.removeItem(PROGRESS_KEY);refreshContinue();}});
+  els.playButton.addEventListener('click',async()=>{if(!active)return;if(els.audio.paused){try{await safePlay()}catch(e){showError(e?.message||'Playback could not start.')}}else els.audio.pause();});
+  els.miniPlay.addEventListener('click',async()=>{if(!active)return;if(els.audio.paused){try{await safePlay()}catch(e){showError(e?.message||'Playback could not start.')}}else els.audio.pause();});
+  els.previousButton.addEventListener('click',()=>playNeighbor('previous'));els.nextButton.addEventListener('click',()=>playNeighbor('next'));els.backButton.addEventListener('click',()=>jump(-10));els.forwardButton.addEventListener('click',()=>jump(10));els.minimizePlayer.addEventListener('click',minimize);els.expandPlayer.addEventListener('click',showPlayer);els.closePlayer.addEventListener('click',closePlayer);els.retryButton.addEventListener('click',()=>{if(!active||sourceBusy)return;automaticRetries.delete(active.key);const position=Number(els.audio.currentTime)||Number(loadProgress().position)||0;clearError();start(active,position,{force:true});});
+  els.speedSelect.addEventListener('change',()=>{const r=Number(els.speedSelect.value)||1;els.audio.playbackRate=r;localStorage.setItem(SPEED_KEY,String(r));});
+  els.volume.addEventListener('input',()=>{els.audio.volume=Number(els.volume.value);if(els.audio.muted&&Number(els.volume.value)>0)els.audio.muted=false;els.muteButton.textContent=els.audio.muted?'Unmute':'Mute';});els.muteButton.addEventListener('click',()=>{els.audio.muted=!els.audio.muted;els.muteButton.textContent=els.audio.muted?'Unmute':'Mute';});els.sleepSelect.addEventListener('change',()=>setSleep(els.sleepSelect.value));
+  els.seek.addEventListener('pointerdown',()=>{isSeeking=true});els.seek.addEventListener('pointerup',()=>{isSeeking=false});els.seek.addEventListener('input',()=>{if(Number.isFinite(els.audio.duration)&&els.audio.duration>0)els.audio.currentTime=(Number(els.seek.value)/1000)*els.audio.duration;});
+  els.audio.addEventListener('play',updateButtons);els.audio.addEventListener('pause',updateButtons);els.audio.addEventListener('waiting',()=>{if(active)setSourceBusy(true)});els.audio.addEventListener('playing',()=>{if(active?.key)automaticRetries.delete(active.key);setSourceBusy(false);clearError();updateButtons();});els.audio.addEventListener('canplay',()=>{clearError();});els.audio.addEventListener('error',()=>{const mediaError=els.audio.error;if(!active||!els.audio.getAttribute('src')||!mediaError)return;if(performance.now()<suppressMediaErrorsUntil)return;const track=active,position=Number(els.audio.currentTime)||Number(loadProgress().position)||0,sequence=startSequence;diagnoseAndRecover(track,position,sequence);});
+  els.audio.addEventListener('loadedmetadata',()=>{els.duration.textContent=fmtTime(els.audio.duration)});
+  els.audio.addEventListener('timeupdate',()=>{const c=els.audio.currentTime||0,d=els.audio.duration||0;els.currentTime.textContent=fmtTime(c);els.miniTime.textContent=fmtTime(c);if(!isSeeking&&d>0)els.seek.value=String(Math.round(c/d*1000));if(active?.key){const whole=Math.floor(c);if(whole!==lastSavedSecond&&whole>0&&whole%5===0){lastSavedSecond=whole;saveProgress({trackKey:active.key,trackName:active.name,position:c});}}if('mediaSession'in navigator&&'setPositionState'in navigator.mediaSession&&d>0&&Number.isFinite(d)){try{navigator.mediaSession.setPositionState({duration:d,playbackRate:els.audio.playbackRate,position:Math.min(c,d)})}catch{}}});
+  els.audio.addEventListener('ended',async()=>{if(active?.key)saveProgress({trackKey:active.key,trackName:active.name,position:0});if(stopAtEpisodeEnd){stopAtEpisodeEnd=false;els.sleepSelect.value='off';updateButtons();return;}if(active?.nextKey)await playNeighbor('next');else updateButtons();});
+  if('mediaSession'in navigator){const set=(n,f)=>{try{navigator.mediaSession.setActionHandler(n,f)}catch{}};set('play',()=>safePlay().catch(e=>showError(e?.message||'Playback could not start.')));set('pause',()=>els.audio.pause());set('seekbackward',d=>jump(-(d.seekOffset||10)));set('seekforward',d=>jump(d.seekOffset||10));set('previoustrack',()=>playNeighbor('previous'));set('nexttrack',()=>playNeighbor('next'));set('seekto',d=>{if(Number.isFinite(d.seekTime))els.audio.currentTime=d.seekTime});}
+  els.playerSheet.hidden=true;els.miniPlayer.hidden=true;
+  els.buffering.hidden=true;
+  const savedRate=Number(localStorage.getItem(SPEED_KEY));if([.75,1,1.25,1.5,1.75,2].includes(savedRate))els.speedSelect.value=String(savedRate);els.audio.playbackRate=Number(els.speedSelect.value)||1;refreshContinue();render();updateButtons();
+})();`;
+
+function simplePage(title, message, back = false, hostname = "listen.ox-audio-player.workers.dev") {
+  return pageShell(hostname, `<section class="hero"><div class="eyebrow">OX NOVELS · SECURE PLAYER</div><h1>${escapeHtml(title)}</h1><p>${escapeHtml(message)}</p>${back ? `<p><a class="primary-link" href="${OX_HOME}">Return to OX Novels</a></p>` : ""}</section>`, null);
+}
+
+function pageShell(hostname, body, session) {
+  const siteName = escapeHtml(session?.siteName || "OX Novels");
+  const accent = /^#[0-9a-fA-F]{6}$/.test(String(session?.siteAccent || "")) ? String(session.siteAccent) : "#13c3b3";
+  const logo = session?.siteLogo
+    ? `<img class="brand-logo" src="${escapeHtml(session.siteLogo)}" alt="" referrerpolicy="no-referrer">`
+    : `<span class="mark">OX</span>`;
+  const membershipCandidates = [session?.membershipPlan, session?.membershipStatus, session?.access]
+    .map(value => String(value || "").trim())
+    .filter(value => value && !/^(none|null|undefined)$/i.test(value));
+  const membershipLine = session
+    ? escapeHtml(membershipCandidates[0] || "Member")
+    : "Protected Audio";
+  const expiryLine = session?.membershipExpiresAt
+    ? `<small>Access until ${escapeHtml(formatDisplayDate(session.membershipExpiresAt))}</small>`
+    : "";
+  const accountMenu = session ? `
+    <button class="site-menu-toggle" id="siteMenuToggle" type="button" aria-label="Open account menu" aria-expanded="false">☰</button>
+    <div class="site-menu-popover" id="siteMenuPopover" hidden>
+      <div class="site-menu-summary"><strong>${escapeHtml(session.displayName || "Member")}</strong><span>${membershipLine}</span>${expiryLine}</div>
+      <a class="site-menu-action" href="${OX_HOME}">Account details on OX</a>
+      <a class="site-menu-action" href="${OX_HOME}">Return to OX Novels</a>
+      <a class="site-menu-action danger" href="/logout">Clear Player session</a>
+    </div>` : `<span class="member-pill">PROTECTED AUDIO</span>`;
+
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="${accent}"><title>${siteName} — Player</title><style>
+  :root{--accent:${accent};--accent-soft:color-mix(in srgb,var(--accent) 12%,white);--ink:#142426;--muted:#63777a;--line:#dce7e7;--bg:#f5f7f7}
+  *{box-sizing:border-box}[hidden]{display:none!important}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,select{font:inherit}button{cursor:pointer}.topbar{height:56px;background:#fff;border-bottom:1px solid #e3e8ea;position:sticky;top:0;z-index:40}.topbar-inner{height:100%;max-width:1200px;margin:auto;padding:0 18px;display:flex;align-items:center;justify-content:space-between}.brand{display:flex;gap:10px;align-items:center;font-weight:800;color:#182629;text-decoration:none}.brand-logo,.mark{width:34px;height:34px;border-radius:10px}.brand-logo{object-fit:cover;border:1px solid rgba(0,0,0,.06)}.mark{display:grid;place-items:center;background:linear-gradient(135deg,#101d21,#23484c);color:var(--accent);font-size:12px}.top-actions{position:relative}.site-menu-toggle{width:40px;height:40px;border:0;background:transparent;border-radius:10px;font-size:22px;line-height:1}.site-menu-toggle:hover{background:#f3f5f6}.site-menu-popover{position:absolute;right:0;top:46px;width:min(290px,calc(100vw - 28px));padding:8px;background:#fff;border:1px solid #dde5e7;border-radius:14px;box-shadow:0 18px 55px rgba(17,38,41,.16)}.site-menu-summary{padding:8px 9px 11px;display:grid;gap:3px;border-bottom:1px solid #edf1f2}.site-menu-summary strong{font-size:14px}.site-menu-summary span,.site-menu-summary small{color:#667176;font-size:12px;line-height:1.4}.site-menu-action{display:block;width:100%;padding:10px 9px;border:0;background:transparent;color:#1c2b2e;text-align:left;text-decoration:none;border-radius:9px;font-weight:700;font-size:13px}.site-menu-action:hover{background:#f4f7f7}.site-menu-action.danger{color:#9d3d3d}.member-pill{font-size:12px;padding:7px 10px;border-radius:999px;background:var(--accent-soft);color:#087b73;font-weight:800}
+  main{max-width:1040px;margin:26px auto 150px;padding:0 18px}.hero,.panel,.story-card,.stat{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 8px 30px rgba(16,45,48,.05)}.hero{padding:28px}.hero h1,.story-card h1{font-size:32px;margin:8px 0 9px}.hero p,.story-card p,.panel p{color:#587074;line-height:1.6}.eyebrow{font-size:10px;letter-spacing:.18em;font-weight:900;color:var(--accent)}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:14px 0}.stat{padding:17px}.stat span{display:block;color:#6b7d80;font-size:12px}.stat strong{display:block;margin-top:5px;font-size:18px;color:#087f77}.panel{padding:22px;margin-top:14px}.primary-link{display:inline-block;margin-top:12px;padding:10px 14px;border-radius:10px;background:#142426;color:#fff;text-decoration:none;font-weight:800}
+  .story-card{display:flex;align-items:center;gap:20px;padding:22px}.story-cover,.story-mark{width:132px;height:184px;border-radius:15px;flex:0 0 auto}.story-cover{object-fit:cover;border:1px solid #e1e7e8;background:#eef3f3}.story-mark{display:grid;place-items:center;background:linear-gradient(135deg,#101d21,#23484c);color:var(--accent);font-weight:900;font-size:20px}.story-copy{min-width:0;flex:1}.story-description{max-width:720px;margin:0 0 10px}.story-meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;color:#6d7f82;font-size:12px}.story-meta>span{padding:5px 8px;border:1px solid #dce5e5;border-radius:999px}.genre-pill{background:var(--accent-soft);color:#087b73!important;border-color:transparent!important;font-weight:800}.continue{border:0;background:var(--accent);color:#fff;border-radius:11px;padding:12px 15px;font-weight:900;max-width:260px}.continue:disabled{pointer-events:none;opacity:.52}
+  .browser-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.browser-head h2{margin:5px 0 0}.soft,.icon-btn{border:1px solid #d5e2e2;background:#fff;color:#163235;border-radius:10px;padding:9px 12px}.catalog-loading{padding:18px 0;color:#6d7f82}.catalog-loading.is-error{color:#9d3d3d}.breadcrumbs{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin:18px 0}.breadcrumbs button{border:0;background:transparent;color:#087f77;font-weight:800;padding:2px}.browser{display:grid;gap:8px}.browser-row{width:100%;display:flex;align-items:center;gap:12px;text-align:left;border:1px solid #dde7e7;background:#fff;border-radius:12px;padding:12px}.browser-row:hover{border-color:#98d8d3;background:#f8fdfd}.row-icon{width:34px;height:34px;border-radius:9px;background:#edf8f7;color:#07867e;display:grid;place-items:center}.row-copy{min-width:0;flex:1}.row-copy strong,.row-copy span{display:block}.row-copy strong{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.row-copy span{font-size:12px;color:#748589;margin-top:3px}.row-action{font-weight:900;color:#07867e}.empty{padding:24px;text-align:center;color:#76878a}.foot-note{text-align:center;color:#7d8e90;font-size:12px;margin:18px 0}
+  .player-sheet{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);width:min(760px,calc(100vw - 24px));background:#fff;border:1px solid #d8e4e4;border-radius:20px;box-shadow:0 20px 70px rgba(9,34,36,.22);padding:18px;z-index:50}.player-top{display:flex;align-items:center;justify-content:space-between;gap:12px}.player-top strong,.player-top span{display:block}.player-top span{font-size:13px;color:#677b7e;margin-top:3px}.top-actions{display:flex;gap:7px}.player-error{display:flex;justify-content:space-between;gap:10px;align-items:center;background:#fff1f1;border:1px solid #ffcaca;color:#a73b3b;padding:10px 12px;border-radius:10px;margin-top:12px}.player-error button{border:1px solid #e9bbbb;background:#fff;border-radius:8px;padding:7px 10px;font-weight:800}.buffering{text-align:center;margin:10px 0;color:#6b7e80}.time-row{display:grid;grid-template-columns:48px 1fr 48px;align-items:center;gap:9px;margin-top:14px;font-size:12px;color:#65777a}.time-row input{width:100%}.transport{display:flex;justify-content:center;align-items:center;gap:10px;margin:14px 0}.transport button{width:48px;height:48px;border-radius:50%;border:1px solid #d6e2e2;background:#fff;font-weight:900}.transport .play{width:60px;height:60px;background:var(--accent);color:#fff;border-color:var(--accent);font-size:20px;position:relative}.transport .play.is-loading,.mini-play.is-loading{color:transparent;position:relative}.transport .play.is-loading::after,.mini-play.is-loading::after{content:'';position:absolute;left:50%;top:50%;width:18px;height:18px;margin:-12px 0 0 -12px;border:3px solid rgba(255,255,255,.45);border-top-color:#fff;border-radius:50%;animation:oxSpin .7s linear infinite}@keyframes oxSpin{to{transform:rotate(360deg)}}button:disabled,input:disabled,select:disabled{cursor:not-allowed;opacity:.58}.transport small{display:block;font-size:8px}.player-options{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:10px}.player-options label{display:flex;flex-direction:column;gap:7px;border:1px solid #dbe5e5;border-radius:11px;padding:10px;font-size:11px;color:#587074}.player-options select{border:0;background:transparent;font-weight:800;color:#142426}.volume-row{display:flex;align-items:center;gap:7px}.volume-row input{min-width:0;flex:1}.volume-row button{border:1px solid #d7e2e2;background:#fff;border-radius:8px;padding:6px 8px;font-size:11px}.mini-player{position:fixed;left:12px;right:12px;bottom:12px;max-width:620px;margin:auto;background:#fff;border:1px solid #d9e5e5;border-radius:15px;box-shadow:0 14px 45px rgba(9,34,36,.2);display:flex;align-items:center;gap:10px;padding:10px;z-index:50}.mini-copy{flex:1;min-width:0;text-align:left;border:0;background:transparent}.mini-copy strong,.mini-copy span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mini-copy span{font-size:11px;color:#728386}.mini-play{width:42px;height:42px;border-radius:50%;border:0;background:var(--accent);color:#fff;font-weight:900}.warn{border-color:#ffd5a5}
+  @media(max-width:720px){.topbar-inner{padding:0 12px}.story-card{align-items:flex-start;flex-wrap:wrap;padding:18px}.story-cover,.story-mark{width:92px;height:128px}.story-copy{flex:1}.story-card h1,.hero h1{font-size:25px}.continue{width:100%;max-width:none}.stats{grid-template-columns:1fr 1fr}.player-options{grid-template-columns:1fr}.player-sheet{bottom:8px}.browser-row{padding:11px}}
+  </style></head><body><header class="topbar"><div class="topbar-inner"><a class="brand" href="${OX_HOME}" aria-label="OX Novels home">${logo}<span>${siteName}</span></a><div class="top-actions">${accountMenu}</div></div></header><main>${body}</main>
+  <script>(()=>{const b=document.getElementById('siteMenuToggle'),p=document.getElementById('siteMenuPopover');if(!b||!p)return;b.addEventListener('click',()=>{const o=p.hidden;p.hidden=!o;b.setAttribute('aria-expanded',String(o))});document.addEventListener('click',e=>{if(p.hidden||p.contains(e.target)||b.contains(e.target))return;p.hidden=true;b.setAttribute('aria-expanded','false')});})();</script>
+  </body></html>`;
+}
+
+function formatDisplayDate(value) {
+  const d = new Date(String(value || ""));
+  if (!Number.isFinite(d.getTime())) return String(value || "");
+  return d.toLocaleString("en", { year:"numeric", month:"short", day:"numeric", hour:"2-digit", minute:"2-digit", timeZone:"UTC" }) + " UTC";
+}
+
+function safeScriptJson(text) {
+  return String(text).replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026").replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
+}
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>'"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[ch]);
+}

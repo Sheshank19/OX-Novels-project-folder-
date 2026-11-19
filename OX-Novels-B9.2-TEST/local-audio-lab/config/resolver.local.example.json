@@ -1,0 +1,5 @@
+{
+  "resolverUrl": "PASTE_YOUR_SEPARATE_AUDIO_RESOLVER_WEB_APP_URL_HERE",
+  "resolverSecret": "PASTE_THE_SECRET_YOU_SET_IN_THE_AUDIO_RESOLVER_SCRIPT_PROPERTY_HERE",
+  "defaultStoryId": "a-dragon-s-revenge"
+}

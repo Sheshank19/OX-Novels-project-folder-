@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="Audio stories and member access.">
+  <title>Story Library</title>
+  <link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body class="site-config-loading">
+  <div class="site-loading-screen" id="siteLoadingScreen" role="status" aria-live="polite" aria-label="Loading website">
+    <span class="site-loading-spinner" aria-hidden="true"></span>
+    <span class="site-loading-text">Loading…</span>
+  </div>
+  <a class="skip-link" href="#mainContent">Skip to main content</a>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="/" aria-label="Site home">
+        <span class="brand-mark" hidden></span>
+        <span class="brand-name">Site</span>
+      </a>
+
+      <div class="top-actions">
+        <button class="site-menu-toggle" id="siteMenuToggle" type="button" aria-label="Open account menu" aria-expanded="false" aria-controls="siteMenuPopover">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 7h14"></path><path d="M5 12h14"></path><path d="M5 17h14"></path></svg>
+        </button>
+        <div class="site-menu-popover" id="siteMenuPopover" hidden>
+          <div class="site-menu-summary" id="siteMenuSummary"></div>
+          <button class="site-menu-action" id="contactButton" type="button" hidden>Contact</button>
+          <button class="site-menu-action" id="loginButton" type="button">Continue with Google</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="mainContent">
+    <section class="creator-shell" aria-labelledby="creatorTitle">
+      <div class="creator-card">
+        <div class="creator-banner-frame">
+          <div class="creator-banner is-empty-banner"></div>
+        </div>
+        <div class="creator-main">
+          <div class="creator-avatar" aria-hidden="true" hidden></div>
+          <div class="creator-identity">
+            <h1 id="creatorTitle">Your Site</h1>
+            <p class="handle"></p>
+            <div class="access-status-row">
+              <button class="access-status-pill is-neutral" id="accessStatusPill" type="button" aria-live="polite" aria-label="View your OX access" hidden>Guest Mode</button>
+            </div>
+          </div>
+          <div class="creator-profile-actions">
+            <button class="header-support-button creator-support-button" id="supportButton" type="button" hidden>Support</button>
+            <button class="creator-share" id="creatorShare" type="button" aria-label="Share site" title="Share"><span class="creator-share-dots" aria-hidden="true"><i></i><i></i><i></i></span></button>
+          </div>
+          <p class="creator-bio"></p>
+        </div>
+      </div>
+    </section>
+
+    <div class="tabs-sticky-sentinel" id="tabsStickySentinel" aria-hidden="true"></div>
+    <div class="tabs-sticky-shell">
+      <div class="tabs-sticky-inner">
+        <nav class="profile-tabs" aria-label="Site sections" role="tablist">
+          <button class="profile-tab active" id="storiesTab" data-tab="stories" type="button" role="tab" aria-selected="true" aria-controls="storiesPanel" tabindex="0">Stories</button>
+          <button class="profile-tab" id="postsTab" data-tab="posts" type="button" role="tab" aria-selected="false" aria-controls="postsPanel" tabindex="-1">Posts <span class="chat-tab-unread" id="postsTabUnread" aria-label="0 unread posts" hidden>0</span></button>
+          <button class="profile-tab" id="membershipTab" data-tab="membership" type="button" role="tab" aria-selected="false" aria-controls="membershipPanel" tabindex="-1">Membership</button>
+          <button class="profile-tab" id="chatTab" data-tab="chat" type="button" role="tab" aria-selected="false" aria-controls="chatPanel" tabindex="-1" hidden>Chat <span class="chat-tab-unread" id="chatTabUnread" aria-label="0 unread messages" hidden>0</span><span class="chat-tab-unread telegram-tab-alert" id="telegramTabAlert" aria-label="Telegram Backup needs attention" title="Telegram Backup needs attention" hidden>!</span></button>
+        </nav>
+        <button class="search-toggle" id="searchToggle" type="button" aria-label="Open story search" aria-expanded="false" aria-controls="headerSearch">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4 4"></path></svg>
+        </button>
+        <form class="header-search" id="headerSearch" role="search">
+          <svg class="search-icon" aria-hidden="true" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4 4"></path></svg>
+          <input id="storySearch" type="search" placeholder="Search stories..." autocomplete="off" enterkeyhint="search" aria-label="Search stories">
+          <button class="search-close" id="searchClose" type="button">Close</button>
+        </form>
+      </div>
+    </div>
+
+    <section class="content-shell">
+
+      <div class="tab-panel" id="postsPanel" data-panel="posts" role="tabpanel" aria-labelledby="postsTab" hidden>
+        <section class="posts-shell" aria-label="OX Novels posts">
+          <header class="posts-head">
+            <div>
+              <p class="eyebrow">OX NOVELS</p>
+              <h2>Posts</h2>
+              <p>Announcements, story updates and important information from OX Novels.</p>
+            </div>
+          </header>
+
+          <div class="posts-loading" id="postsLoading">
+            <span class="posts-loading-line"></span>
+            <span class="posts-loading-line short"></span>
+          </div>
+
+          <div class="posts-error" id="postsError" hidden>
+            <strong>Posts couldn't load.</strong>
+            <span>Check your connection and try again.</span>
+            <button class="secondary-button" id="retryPosts" type="button">Retry</button>
+          </div>
+
+          <div class="posts-empty" id="postsEmpty" hidden>
+            <strong>No posts yet</strong>
+            <span>Important OX Novels updates will appear here.</span>
+          </div>
+
+          <div class="posts-list" id="postsList" aria-live="polite"></div>
+        </section>
+      </div>
+
+      <div class="tab-panel" id="membershipPanel" data-panel="membership" role="tabpanel" aria-labelledby="membershipTab" hidden>
+        <div class="content-toolbar-sentinel" id="membershipToolbarSentinel" aria-hidden="true"></div>
+        <div class="membership-toolbar" id="membershipToolbar">
+          <div class="section-head membership-head">
+            <div>
+              <p class="eyebrow">MEMBERSHIP</p>
+              <h2>One membership. Every story.</h2>
+            </div>
+          </div>
+        </div>
+
+        <div class="membership-tiers" id="membershipTiers">
+          <div class="membership-track" id="membershipTrack"></div>
+          <div class="membership-dots" id="membershipDots" aria-label="Membership tiers" hidden></div>
+        </div>
+
+        <a class="lifetime-membership-entry" href="#stories" data-choose-story aria-label="Choose one story for lifetime access for 49 dollars one-time">
+          <span class="lifetime-entry-copy">
+            <small>LIFETIME STORY ACCESS</small>
+            <strong>Want only one story?</strong>
+            <span>Choose any story and keep access for <b>$49 one-time</b>.</span>
+          </span>
+          <span class="lifetime-entry-action">Choose Story <b aria-hidden="true">→</b></span>
+        </a>
+
+      </div>
+
+      <div class="tab-panel active" id="storiesPanel" data-panel="stories" role="tabpanel" aria-labelledby="storiesTab">
+        <section class="purchased-stories-section" id="purchasedStoriesSection" aria-labelledby="purchasedStoriesTitle" hidden>
+          <div class="section-head gallery-head purchased-stories-head">
+            <h2 id="purchasedStoriesTitle">My Purchased Stories</h2>
+            <span class="story-total" id="purchasedStoriesTotal">0 stories</span>
+          </div>
+          <div class="gallery-grid purchased-stories-grid" id="purchasedStoriesGrid"></div>
+        </section>
+
+        <div class="content-toolbar-sentinel" id="storiesToolbarSentinel" aria-hidden="true"></div>
+        <div class="stories-toolbar" id="storiesToolbar">
+          <div class="section-head gallery-head">
+            <h2>Audio Stories</h2>
+            <span class="story-total" id="storyTotal">Loading...</span>
+          </div>
+
+          <div class="story-classification">
+            <button class="story-filter-chip active" id="allStoriesFilter" type="button" aria-pressed="true">All stories</button>
+            <button class="story-filter-chip" id="genreFilterToggle" type="button" aria-expanded="false" aria-controls="genreMenu">Genres <span class="genre-chevron" aria-hidden="true"></span></button>
+            <div class="genre-menu" id="genreMenu" hidden></div>
+          </div>
+        </div>
+
+        <div class="load-error" id="storyLoadError" role="alert" hidden>
+          <strong>Stories couldn't load.</strong>
+          <p>Check your connection and try again.</p>
+          <button class="secondary-button" id="retryStories" type="button">Retry</button>
+        </div>
+
+        <div class="empty-state" id="emptyState" hidden>
+          <strong>No stories found</strong>
+          <p>Try a different search.</p>
+        </div>
+
+        <div class="gallery-grid" id="galleryGrid" aria-live="polite" aria-busy="true"></div>
+      </div>
+
+      <div class="tab-panel" id="chatPanel" data-panel="chat" role="tabpanel" aria-labelledby="chatTab" hidden>
+        <section class="member-chat-shell" id="memberChatPreview" aria-label="Member Chat">
+          <header class="member-chat-head">
+            <div class="member-chat-admin-mark" id="memberChatAdminMark" aria-hidden="true" hidden></div>
+            <div class="member-chat-head-copy">
+              <p class="eyebrow">MEMBER CHAT</p>
+              <h2>Site Admin</h2>
+              <p class="member-chat-subtitle">Private conversation with the site admin</p>
+            </div>
+            <span class="member-chat-private"><i aria-hidden="true"></i> Private</span>
+          </header>
+
+          <aside class="telegram-backup-reminder" id="telegramBackupReminder" hidden aria-live="polite">
+            <div class="telegram-backup-mark" aria-hidden="true">✈</div>
+            <div class="telegram-backup-copy">
+              <strong id="telegramBackupTitle">Join OX Novels Backup</strong>
+              <span id="telegramBackupText">Connect Telegram for private backup access available to verified paid customers.</span>
+            </div>
+            <button class="secondary-button" id="telegramBackupAction" type="button">Connect Telegram</button>
+          </aside>
+
+          <div class="member-chat-messages" id="memberChatPreviewMessages" aria-label="Conversation preview">
+            <div class="member-chat-empty-state"><strong>Loading messages…</strong><span>Your private conversation will appear here.</span></div>
+          </div>
+
+          <form class="member-chat-compose" id="memberChatPreviewForm">
+            <label class="sr-only" for="memberChatPreviewInput">Message site admin</label>
+            <textarea id="memberChatPreviewInput" rows="1" maxlength="2000" placeholder="Write a message…" autocomplete="off"></textarea>
+            <button class="primary-button member-chat-send" type="submit">Send</button>
+          </form>
+          <p class="member-chat-note">Only you and the site admin can see this conversation.</p>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-legal-footer" aria-label="Legal and support">
+    <div class="site-legal-footer-inner">
+      <span>© OX Novels</span>
+      <nav aria-label="Legal links">
+        <a href="/terms">Terms of Service</a>
+        <a href="/privacy">Privacy Policy</a>
+        <a href="/refund-policy">Refund &amp; Cancellation</a>
+        <a href="/contact">Contact &amp; Support</a>
+      </nav>
+    </div>
+  </footer>
+
+
+  <div class="dialog-backdrop" id="storyDialog" hidden>
+    <section class="story-dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle" aria-describedby="dialogDescription" tabindex="-1">
+      <button class="dialog-close" id="storyDialogClose" type="button" aria-label="Close story viewer">&times;</button>
+
+      <div class="dialog-cover-wrap" id="dialogCoverWrap">
+        <img id="dialogCover" class="dialog-cover" alt="" draggable="false">
+      </div>
+
+      <div class="dialog-details">
+        <div class="dialog-meta">
+          <p class="dialog-category" id="dialogCategory"></p>
+        </div>
+        <h2 id="dialogTitle"></h2>
+        <p class="dialog-description" id="dialogDescription"></p>
+
+        <div class="dialog-status" id="dialogStatus">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span id="dialogStatusText">Membership required</span>
+        </div>
+
+        <button class="primary-button wide story-choice-primary" id="dialogAction" type="button">Join Membership</button>
+        <p class="dialog-action-note" id="dialogActionNote" hidden></p>
+        <div class="dialog-choice-separator" id="dialogChoiceSeparator" hidden aria-hidden="true"><span>OR</span></div>
+        <button class="secondary-button wide dialog-secondary-action" id="dialogSecondaryAction" type="button" hidden>Join Membership</button>
+        <p class="dialog-action-note dialog-secondary-note" id="dialogSecondaryNote" hidden></p>
+      </div>
+    </section>
+  </div>
+
+  <div class="dialog-backdrop" id="loginDialog" hidden>
+    <section class="small-dialog" role="dialog" aria-modal="true" aria-labelledby="loginTitle" tabindex="-1">
+      <button class="dialog-close" id="loginDialogClose" type="button" aria-label="Close login">&times;</button>
+      <div class="mini-logo" aria-hidden="true" hidden></div>
+      <h2 id="loginTitle">Continue with Google</h2>
+      <p class="auth-intro" id="authIntro">Use your Google account to continue. New members are created automatically.</p>
+      <div class="google-auth-button" id="googleSignInButton" aria-live="polite"></div>
+      <p class="auth-error" id="authError" role="alert" hidden></p>
+      <p class="dialog-note">No password is stored by this website. Membership can be added after sign-in.</p>
+    </section>
+  </div>
+
+  <div class="dialog-backdrop" id="accountDialog" hidden>
+    <section class="small-dialog account-dialog" role="dialog" aria-modal="true" aria-labelledby="accountTitle" tabindex="-1">
+      <button class="dialog-close" id="accountDialogClose" type="button" aria-label="Close account">&times;</button>
+      <div class="mini-logo" aria-hidden="true" hidden></div>
+      <h2 id="accountTitle">Your OX Access</h2>
+      <div class="account-profile-photo">
+        <div class="account-profile-avatar" id="accountProfileAvatar" aria-hidden="true">•</div>
+        <div>
+          <strong>Profile picture</strong>
+          <small>Used for your account and member chat.</small>
+          <div class="account-photo-actions">
+            <button class="secondary-button" id="accountProfileReplace" type="button">Add / Replace</button>
+            <button class="text-button" id="accountProfileRemove" type="button">Remove</button>
+          </div>
+          <input id="accountProfileFile" type="file" accept="image/jpeg,image/png,image/webp,image/avif" hidden>
+        </div>
+      </div>
+      <dl class="account-details">
+        <div class="account-access-highlight">
+          <dt>Access status</dt>
+          <dd id="accountAccessStatus">Logged In</dd>
+        </div>
+        <div>
+          <dt>Name</dt>
+          <dd id="accountName">—</dd>
+        </div>
+        <div>
+          <dt>Email</dt>
+          <dd id="accountEmail">—</dd>
+        </div>
+        <div data-account-field="membershipStatus">
+          <dt>Membership</dt>
+          <dd id="accountMembership">None</dd>
+        </div>
+        <div data-account-field="membershipTier">
+          <dt>Plan</dt>
+          <dd id="accountPlan">None</dd>
+        </div>
+        <div>
+          <dt id="accountBillingDateLabel">Expires</dt>
+          <dd id="accountExpiry">—</dd>
+        </div>
+        <div>
+          <dt>Auto-renew</dt>
+          <dd id="accountAutoRenew">—</dd>
+        </div>
+        <div>
+          <dt>Subscription</dt>
+          <dd id="accountSubscription">—</dd>
+        </div>
+        <div>
+          <dt>Lifetime Stories</dt>
+          <dd id="accountLifetimeStories">0</dd>
+        </div>
+        <div>
+          <dt>Chat access</dt>
+          <dd id="accountChatAccess">Locked</dd>
+        </div>
+      </dl>
+      <div class="account-actions">
+        <button class="secondary-button wide" id="accountRefreshPaypal" type="button" hidden>Refresh PayPal status</button>
+        <button class="secondary-button wide" id="accountLogout" type="button">Log out</button>
+        <button class="secondary-button wide" id="accountDialogDone" type="button">Close</button>
+      </div>
+    </section>
+  </div>
+
+
+  <div class="telegram-backup-alert-layer" id="telegramBackupAlert" hidden>
+    <div class="telegram-backup-alert-scrim" data-telegram-alert-scrim></div>
+
+    <section class="telegram-backup-alert-card"
+             role="dialog"
+             aria-modal="true"
+             aria-labelledby="telegramBackupAlertTitle"
+             aria-describedby="telegramBackupAlertText">
+
+      <button class="telegram-backup-alert-close"
+              id="telegramBackupAlertClose"
+              type="button"
+              aria-label="Close Telegram Backup reminder">&times;</button>
+
+      <div class="telegram-backup-alert-icon" aria-hidden="true">✈</div>
+
+      <p class="telegram-backup-alert-kicker">OX NOVELS BACKUP</p>
+
+      <h2 id="telegramBackupAlertTitle">
+        Connect Telegram Backup
+      </h2>
+
+      <p id="telegramBackupAlertText">
+        Connect Telegram to access the private OX Novels Backup channel.
+      </p>
+
+      <div class="telegram-backup-alert-actions">
+        <button class="secondary-button"
+                id="telegramBackupAlertLater"
+                type="button">
+          Not now
+        </button>
+
+        <button class="primary-button"
+                id="telegramBackupAlertAction"
+                type="button">
+          Connect Telegram
+        </button>
+      </div>
+
+      <small class="telegram-backup-alert-note">
+        Telegram may take a few seconds to open. Keep OX open while you finish setup.
+      </small>
+    </section>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="/assets/app.js"></script>
+</body>
+</html>

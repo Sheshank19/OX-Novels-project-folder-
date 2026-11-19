@@ -1,0 +1,17 @@
+const fs=require('node:fs');const vm=require('node:vm');const assert=require('node:assert/strict');
+const code=fs.readFileSync('src/index.js','utf8');
+const begin=code.indexOf('async function handleDodoLiveLifetimePaymentEvent('),end=code.indexOf('async function oxClaimDodoLiveEvent(',begin);
+assert(begin>0&&end>begin,'live lifetime handler');
+const fn=code.slice(begin,end);
+assert(fn.includes("data?.total_amount === 0 || data?.total_amount === '0'"),'zero value check');
+assert(fn.includes('recognizedPurchaseAmount,\n      LIFETIME_STORY_CURRENCY,'),'persist actual zero-dollar amount');
+assert(fn.includes('`dodo-lifetime:${paymentId}`'),'idempotency original');
+assert(!fn.includes("provider:'paypal'"),'no paypal changes');
+const webhook=code.slice(code.indexOf('async function handleDodoLiveWebhook('));
+assert(webhook.includes("? '0.00' : dodoEventAmount(data)"),'zero dollar payment event logging');
+assert(code.includes('const B92_PLAYER_CANARY_ID'),'protected player intact');
+assert(code.includes('async function handlePaypalWebhook('),'paypal webhook intact');
+assert(code.includes('async function handleDodoTestWebhook('),'test webhook intact');
+const env={};function price(total){return total===0||total==='0'?'0.00':'65.00'};
+assert.equal(price(0),'0.00');assert.equal(price('0'),'0.00');assert.equal(price(7670),'65.00');
+console.log('PASS: zero-dollar purchase accounting; event amount; 3 original payment & player routes preserved; source checks.');

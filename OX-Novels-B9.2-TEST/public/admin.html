@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <title>Site Admin</title>
+  <link rel="stylesheet" href="/assets/admin.css">
+</head>
+<body class="admin-auth-pending">
+
+  <div class="backend-gate" id="backendGate">
+    <section class="backend-gate-card" aria-labelledby="backendGateTitle">
+      <span class="brand-logo backend-gate-logo" id="backendGateLogo" hidden></span>
+      <p class="backend-gate-kicker" id="backendGateKicker">WEBSITE ADMIN</p>
+      <h1 id="backendGateTitle">Admin access</h1>
+      <p id="backendGateText">Checking the backend…</p>
+      <form id="adminLoginForm" class="backend-login-form" hidden>
+        <label><span>Admin password</span><input id="adminPassword" type="password" autocomplete="current-password" required></label>
+        <button class="primary" type="submit">Open Admin</button>
+      </form>
+      <div class="backend-setup-help" id="backendSetupHelp" hidden></div>
+      <p class="backend-gate-error" id="backendGateError" role="alert"></p>
+    </section>
+  </div>
+  <div class="admin-app" id="adminApp" hidden>
+    <aside class="sidebar" id="sidebar" aria-label="Admin navigation">
+      <div class="sidebar-brand">
+        <button class="brand" type="button" data-go="dashboard"><span class="brand-logo" id="adminBrandLogo" hidden></span><span><strong id="adminBrandName">Site</strong><small>Admin Console</small></span></button>
+        <button class="icon-btn mobile-only" id="closeMenu" type="button" aria-label="Close menu">×</button>
+      </div>
+      <nav class="nav-scroll">
+        <div class="nav-group"><button class="nav-item active" data-go="dashboard" type="button"><i>⌂</i><span>Dashboard</span></button></div>
+        <div class="nav-group"><label>SITE</label><button class="nav-item" data-go="appearance" type="button"><i>◐</i><span>Appearance</span></button><button class="nav-item" data-go="settings" type="button"><i>⚙</i><span>Site Settings</span></button></div>
+        <div class="nav-group"><label>CONTENT</label><button class="nav-item" data-go="stories" type="button"><i>▦</i><span>Story Library</span><b id="storyNavCount">0</b></button><button class="nav-item" data-go="posts" type="button"><i>▤</i><span>Posts</span><b id="postsNavCount">0</b></button><button class="nav-item" data-go="add" type="button"><i>＋</i><span>Add Stories</span></button><button class="nav-item" data-go="checks" type="button"><i>✓</i><span>Story Checks</span><em id="checkNavDot"></em></button><button class="nav-item" data-go="playerCatalogs" type="button"><i>▶</i><span>Player Catalogs</span><b id="playerCatalogNavCount">0</b></button></div>
+        <div class="nav-group"><label>MEMBERS</label><button class="nav-item" data-go="users" type="button"><i>♙</i><span>Users</span><b id="userNavCount">0</b></button><button class="nav-item" data-go="chat" type="button"><i>✉</i><span>Chat</span><b class="accent" id="chatCount">0</b></button><button class="nav-item" data-go="notifications" type="button"><i>◉</i><span>Notifications</span><b class="accent" id="notificationCount">0</b></button></div>
+        <div class="nav-group"><label>BUSINESS</label><button class="nav-item" data-go="membership" type="button"><i>◆</i><span>Membership Tiers</span></button><button class="nav-item" data-go="lifetime" type="button"><i>∞</i><span>Lifetime Purchases</span></button><button class="nav-item" data-go="payments" type="button"><i>◈</i><span>Payment Methods</span></button><button class="nav-item" data-go="finance" type="button"><i>₹</i><span>Finance</span></button></div>
+        <div class="nav-group"><label>SYSTEM</label><button class="nav-item" data-go="integrations" type="button"><i>↔</i><span>Integrations</span></button><button class="nav-item" data-go="activity" type="button"><i>☷</i><span>Activity Log</span></button><button class="nav-item" data-go="backup" type="button"><i>⇩</i><span>Backup / Restore</span></button></div>
+      </nav>
+      <div class="sidebar-foot"><div class="admin-mini"><span>A</span><p><strong>Administrator</strong><small id="adminBackendLabel">Backend connecting…</small></p></div><a href="/" target="_blank" rel="noopener">View public site <span>↗</span></a><button class="sidebar-logout" id="adminLogout" type="button">Log out</button></div>
+    </aside>
+    <div class="scrim" id="menuScrim"></div>
+
+    <div class="workspace">
+      <header class="mobile-bar"><button class="icon-btn" id="openMenu" type="button">☰</button><div><span class="brand-logo small" id="adminMobileBrandLogo">•</span><strong id="mobileTitle">Dashboard</strong></div><a class="icon-btn" href="/">↗</a></header>
+      <main class="main">
+        <header class="page-head"><div><small id="breadcrumb">Admin / Dashboard</small><h1 id="pageTitle">Dashboard</h1><p id="pageSubtitle">A quick view of your stories, members, messages and business.</p></div><div class="page-actions" id="pageActions"></div></header>
+        <div id="view"></div>
+      </main>
+    </div>
+  </div>
+
+  <div class="modal-layer" id="modalLayer" aria-hidden="true"><div class="modal-scrim" data-close-modal></div><section class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle"><button class="drawer-close" type="button" data-close-modal>×</button><div id="drawerContent"></div></section></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="/assets/admin.js"></script>
+</body>
+</html>

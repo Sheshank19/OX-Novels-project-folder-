@@ -1,0 +1,8 @@
+/* /49 keeps the normal OX Stories layout, while Membership acts as a
+   navigation shortcut back to the normal Membership page. Chat and the
+   embedded non-story panels stay unavailable inside /49 itself. */
+.lifetime-purchase-page #chatTab,
+.lifetime-purchase-page #membershipPanel,
+.lifetime-purchase-page #chatPanel {
+  display: none !important;
+}

@@ -1,0 +1,29 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "listen",
+  "account_id": "3440ce4434b656cf94f6a5cf70470afd",
+  "main": "src/index.js",
+  "compatibility_date": "2026-10-03",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": false
+  },
+  "d1_databases": [
+    {
+      "binding": "B92_AUDIT_DB",
+      "database_name": "ox-b92-catalog-control",
+      "database_id": "68096623-ca85-407f-b340-9c0235ce5917",
+      "remote": true
+    }
+  ],
+  "vars": {
+    "B92_AUDIT_MODE": "readonly",
+    "B92_AUDIT_CANARY_STORY": "a-dragon-s-revenge"
+  },
+  "triggers": {
+    "crons": [
+      "*/5 * * * *"
+    ]
+  }
+}

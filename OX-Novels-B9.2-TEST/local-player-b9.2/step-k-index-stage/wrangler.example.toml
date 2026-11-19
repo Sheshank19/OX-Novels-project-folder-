@@ -1,0 +1,15 @@
+# STEP K ONLY. Copy to wrangler.toml INSIDE this new stage folder.
+# NEVER merge with production Player or Step C/G staging configs.
+name = "ox-b92-step-k-index-stage"
+main = "src/worker.mjs"
+compatibility_date = "2026-10-15"
+workers_dev = true
+
+[vars]
+STAGE_MODE = "index-benchmark-only"
+
+[[d1_databases]]
+binding = "INDEX_STAGE_DB"
+database_name = "ox-b92-step-k-index-db"
+database_id = "REPLACE_WITH_NEW_STEP_K_ONLY_D1_DATABASE_ID"
+migrations_dir = "migrations"

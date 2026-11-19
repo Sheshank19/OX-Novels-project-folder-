@@ -1,0 +1,6 @@
+// In the EXISTING authorized /api/story/:id/open handler, replace ONLY:
+//     return json({ url: story.drive_url });
+// with this. Do not change the existing login / purchase checks above it.
+return json({ url: storyId === B92_PLAYER_CANARY_ID
+  ? `/api/story/${encodeURIComponent(storyId)}/player-launch`
+  : story.drive_url });

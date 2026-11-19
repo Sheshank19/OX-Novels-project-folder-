@@ -1,0 +1,16 @@
+:root{color-scheme:dark;--bg:#10151e;--panel:#1a2431;--line:#344457;--text:#eaf1f8;--muted:#a3b6c8;--accent:#13c3b3}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 system-ui,-apple-system,Segoe UI,sans-serif}
+main{max-width:1120px;margin:0 auto;padding:28px 18px 60px}a{color:var(--accent)}
+header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:15px;margin:0 0 28px}h1{font-size:28px;margin:5px 0}h2{font-size:19px;margin:0 0 15px}p{margin:6px 0 12px}.muted{color:var(--muted)}small{color:var(--muted)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px;margin-bottom:18px}
+.row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.columns{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+input,select,button{font:inherit}input,select{background:#121a25;color:#f5f8fc;border:1px solid #596b7f;border-radius:8px;padding:12px;min-width:0}
+button{border-radius:8px;padding:11px 14px;background:var(--accent);color:#091f1c;border:none;font-weight:700;cursor:pointer}
+button.secondary{border:1px solid #67778b;color:var(--text);background:transparent}button.danger{background:#a53f50;color:white}
+button:disabled{opacity:.55;cursor:default}label{display:flex;flex-direction:column;gap:5px;margin:8px 0;color:var(--muted)}form{display:flex;gap:10px;align-items:end;flex-wrap:wrap}form label{flex:1;min-width:180px}
+.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:14px}th{text-align:left;color:var(--muted);white-space:nowrap}th,td{padding:11px 9px;border-bottom:1px solid var(--line);vertical-align:top}td{word-break:break-word}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}.tab{background:transparent;color:var(--text);border:1px solid var(--line)}.tab.active{background:var(--accent);color:#09251f}
+.notice{background:#1c2930;color:#cfe9e5;border-left:3px solid var(--accent);padding:12px 16px;border-radius:6px;margin:12px 0}
+.status{color:#aee1d8}.warn{color:#ffd28b}.error{color:#ffb2b2}.hide{display:none!important}
+.metric{background:#111b25;border:1px solid var(--line);border-radius:12px;padding:16px;min-width:130px;flex:1}.metric strong{display:block;font-size:21px}.spaced{justify-content:space-between}
+@media(max-width:620px){main{padding:18px 12px 50px}h1{font-size:24px}.card{padding:15px}table{font-size:12px}}

@@ -1,0 +1,127 @@
+--- LIVE-CANARY-BASELINE.mjs
++++ DUAL-PROVIDER-CANDIDATE.mjs
+@@ -4826,11 +4826,13 @@
+   if (eventType === "subscription.on_hold") return "ON_HOLD";
+   if (eventType === "subscription.paused") return "PAUSED";
+   return "PENDING";
+ }
+ __name(dodoStatusForEvent, "dodoStatusForEvent");
+-async function saveDodoTestSubscription(env, owner, data, eventType) {
++async function saveDodoTestSubscription(env, owner, data, eventType) {
++  const oxPreviousGrant = owner?.user_id ? await env.DB.prepare(`SELECT membership_status,membership_plan,
++    membership_tier_id,membership_expires_at FROM users WHERE id=? LIMIT 1`).bind(owner.user_id).first() : null;
+   const now = (/* @__PURE__ */ new Date()).toISOString();
+   const subscriptionId = String(data?.subscription_id || "").trim();
+   const productId = String(data?.product_id || owner?.product_id || "").trim();
+   if (!subscriptionId || !owner?.user_id || !owner?.tier_id) return null;
+   const expectedProduct = String(DODO_TEST_PRODUCT_BY_TIER[owner.tier_id] || "").trim();
+@@ -4885,10 +4887,11 @@
+       payment_status=?,updated_at=? WHERE id=?`).bind(paymentStatus, now, owner.user_id).run();
+   }
+   if (owner.token) {
+     await env.DB.prepare("UPDATE payment_checkout_sessions SET used_at=COALESCE(used_at,?) WHERE token=? AND provider='dodo'").bind(now, owner.token).run().catch(() => null);
+   }
++  await oxPreserveOtherProviderEntitlement(env, owner.user_id, 'dodo', oxPreviousGrant);
+   return { subscriptionId, status, nextBilling };
+ }
+ __name(saveDodoTestSubscription, "saveDodoTestSubscription");
+ function dodoPaymentHasProduct(data, expectedProductId) {
+   const expected = String(expectedProductId || "").trim();
+@@ -6171,10 +6174,55 @@
+   const id = String(subscriptionId || "").trim();
+   if (!/^I-[A-Z0-9]+$/i.test(id)) throw new Error("Invalid PayPal subscription ID.");
+   return paypalRequest(env, `/v1/billing/subscriptions/${encodeURIComponent(id)}`, { method: "GET" }, config);
+ }
+ __name(fetchPaypalSubscription, "fetchPaypalSubscription");
++// OX dual-provider safety: PayPal renewals and future live Dodo grants coexist.
++// This only restores previously verified OTHER-provider membership after a cancellation/expiry event.
++// It does not grant access based on checkout redirects, test Dodo subscriptions, or unsigned webhook payloads.
++async function oxPreserveOtherProviderEntitlement(env, userId, eventProvider, previousGrant = null) {
++  if (!userId || !env?.DB) return;
++  if (previousGrant?.membership_status === 'Granted') {
++    await env.DB.prepare(`UPDATE users SET membership_status='Granted',membership_plan=?,
++      membership_tier_id=?,membership_expires_at=?,updated_at=? WHERE id=?`)
++      .bind(previousGrant.membership_plan || 'Admin Grant', previousGrant.membership_tier_id || null,
++        previousGrant.membership_expires_at || null, new Date().toISOString(), userId).run();
++    return;
++  }
++  const rows = await env.DB.prepare(`SELECT provider,status,environment,tier_id,next_billing_at,last_payment_at,
++      updated_at FROM member_subscriptions WHERE user_id=? AND provider IN ('paypal','dodo')
++      AND provider<>? ORDER BY updated_at DESC LIMIT 30`).bind(userId, eventProvider).all();
++  const nowMs = Date.now();
++  const valid = (rows.results || []).filter(row => {
++    const provider = String(row.provider || '').toLowerCase();
++    const environment = String(row.environment || '').toLowerCase();
++    if (provider === 'dodo' && !['live','live_mode'].includes(environment)) return false;
++    if (provider === 'paypal' && ['sandbox','test_mode','test'].includes(environment)) return false;
++    const status = String(row.status || '').toUpperCase();
++    return status === 'ACTIVE' || (status === 'CANCELLED' &&
++      Number.isFinite(Date.parse(row.next_billing_at || '')) &&
++      Date.parse(row.next_billing_at) > nowMs);
++  });
++  // In ordinary single-provider cases, leave the existing provider's update behavior untouched.
++  if (!valid.length) return;
++  valid.sort((a, b) => {
++    const priority = row => String(row.status || '').toUpperCase() === 'ACTIVE' ? 1 : 0;
++    return priority(b) - priority(a) || Date.parse(b.last_payment_at || b.updated_at || 0) - Date.parse(a.last_payment_at || a.updated_at || 0);
++  });
++  const chosen = valid[0];
++  const active = String(chosen.status || '').toUpperCase() === 'ACTIVE';
++  const tier = chosen.tier_id ? await env.DB.prepare('SELECT id,name,price FROM membership_tiers WHERE id=? LIMIT 1')
++    .bind(chosen.tier_id).first() : null;
++  // Preserve access for a valid other-provider subscription, without modifying its subscription record.
++  await env.DB.prepare(`UPDATE users SET account_status='Active',membership_status='Active',
++    membership_tier_id=COALESCE(?,membership_tier_id),membership_plan=COALESCE(?,membership_plan),
++    membership_expires_at=?,payment_status=?,updated_at=? WHERE id=?`)
++    .bind(tier?.id || null, tier?.name || null, active ? null : chosen.next_billing_at,
++      active ? 'Paid' : 'Cancelled', new Date().toISOString(), userId).run();
++}
++__name(oxPreserveOtherProviderEntitlement, 'oxPreserveOtherProviderEntitlement');
++
+ async function savePaypalSubscription(env, userId, tierId, details, { paymentCompleted = false, environment = "" } = {}) {
+   const now = (/* @__PURE__ */ new Date()).toISOString();
+   const subscriptionId = String(details.id || "");
+   const planId = String(details.plan_id || "");
+   const status = String(details.status || "APPROVAL_PENDING").toUpperCase();
+@@ -6215,10 +6263,13 @@
+     await env.DB.prepare("UPDATE users SET membership_status='Expired',membership_expires_at=NULL,payment_status='Suspended',updated_at=? WHERE id=?").bind(now, userId).run();
+   }
+   if (paidOnceEnvironmentEligible(environment) && (lastPaymentAt || ["ACTIVE", "CANCELLED", "EXPIRED", "SUSPENDED"].includes(status))) {
+     await markUserPaidOnce(env, userId, lastPaymentAt || startedAt || now, environment);
+   }
++  if (['CANCELLED','EXPIRED','SUSPENDED'].includes(status) || oxPreviousGrant?.membership_status === 'Granted') {
++    await oxPreserveOtherProviderEntitlement(env, userId, 'paypal', oxPreviousGrant);
++  }
+   return { status, nextBilling, lastPaymentAt };
+ }
+ __name(savePaypalSubscription, "savePaypalSubscription");
+ async function resolvePaypalSubscriptionOwner(env, details) {
+   const existing = await env.DB.prepare("SELECT user_id,tier_id FROM member_subscriptions WHERE provider_subscription_id=?").bind(details.id).first();
+@@ -6981,13 +7032,24 @@
+     if (pathname === "/api/telegram/webhook" && request.method === "POST") return handleTelegramWebhook(request, env);
+     if (pathname === "/api/story-purchases/catalog" && request.method === "GET") return handleLifetimeStoryCatalog(request, env);
+     if (pathname === "/api/story-purchases/mine" && request.method === "GET") return handleLifetimeStoryMine(request, env);
+     if (pathname === "/api/story-purchases/create-order" && request.method === "POST") return handleLifetimeStoryCreateOrder(request, env);
+     if (pathname === "/api/story-purchases/capture-order" && request.method === "POST") return handleLifetimeStoryCaptureOrder(request, env);
+-    if (pathname === "/api/story-purchases/dodo-test-checkout" && request.method === "POST") return handleDodoLifetimeTestCheckout(request, env, url);
+-    if (pathname === "/api/payments/dodo/test-checkout" && request.method === "POST") return handleDodoTestCheckout(request, env, url);
+-    if (pathname === "/api/payments/dodo/test-webhook" && request.method === "POST") return handleDodoTestWebhook(request, env);
++    if (pathname === "/api/story-purchases/dodo-test-checkout" && request.method === "POST") {
++      if (String(env.OX_ENABLE_DODO_SANDBOX || '') !== '1') return json({ error: 'Not found' }, 404);
++      if (!await isAdminAuthenticated(request, env)) return json({ error: 'Admin only' }, 403);
++      return handleDodoLifetimeTestCheckout(request, env, url);
++    }
++    if (pathname === "/api/payments/dodo/test-checkout" && request.method === "POST") {
++      if (String(env.OX_ENABLE_DODO_SANDBOX || '') !== '1') return json({ error: 'Not found' }, 404);
++      if (!await isAdminAuthenticated(request, env)) return json({ error: 'Admin only' }, 403);
++      return handleDodoTestCheckout(request, env, url);
++    }
++    if (pathname === "/api/payments/dodo/test-webhook" && request.method === "POST") {
++      if (String(env.OX_ENABLE_DODO_SANDBOX || '') !== '1') return json({ error: 'Not found' }, 404);
++      return handleDodoTestWebhook(request, env);
++    }
+     if (pathname === "/api/payments/paypal/checkout-context" && request.method === "POST") return handlePaypalCheckoutContext(request, env);
+     if (pathname === "/api/payments/paypal/confirm" && request.method === "POST") return handlePaypalConfirm(request, env);
+     if (pathname === "/api/payments/paypal/refresh-status" && request.method === "POST") return handlePaypalRefreshStatus(request, env);
+     if (pathname === "/api/payments/paypal/support-context" && request.method === "GET") return handlePaypalSupportContext(request, env);
+     if (pathname === "/api/payments/paypal/support/create" && request.method === "POST") return handlePaypalSupportCreate(request, env);

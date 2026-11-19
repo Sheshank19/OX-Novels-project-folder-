@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow,noarchive" />
+  <title>Move RAPTOR Membership · OX Novels</title>
+  <style>
+    :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#0f172a;background:#f4f7f8}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at top,#dffaf5 0,transparent 38%),#f5f7f8}
+    .card{width:min(100%,520px);background:#fff;border:1px solid #dfe7e7;border-radius:26px;padding:26px;box-shadow:0 24px 70px rgba(15,23,42,.11)}
+    .brand{display:flex;align-items:center;gap:10px;font-weight:900;font-size:17px}.mark{width:36px;height:36px;border-radius:12px;background:#13c3b3;display:grid;place-items:center;color:#fff;font-weight:1000}
+    .badge{display:inline-flex;margin-top:22px;padding:6px 10px;border-radius:999px;background:#e9fbf8;color:#087d72;font-size:12px;font-weight:850;letter-spacing:.05em;text-transform:uppercase}
+    h1{font-size:30px;line-height:1.08;margin:13px 0 10px;letter-spacing:-.035em}p{color:#52606d;line-height:1.65;margin:0 0 14px}.box{margin:18px 0;padding:15px;border-radius:17px;background:#f8fbfb;border:1px solid #e4ecec}.box strong{display:block;color:#0f172a;margin-bottom:4px}
+    .button{width:100%;min-height:52px;border:0;border-radius:16px;padding:13px 16px;font-size:15px;font-weight:850;cursor:pointer;background:#13b9aa;color:#fff;box-shadow:0 12px 25px rgba(19,185,170,.22)}.button:disabled{opacity:.58;cursor:wait}.secondary{background:#fff;color:#0f172a;border:1px solid #d8e1e1;box-shadow:none;margin-top:10px}
+    #googleButton{min-height:52px;display:flex;align-items:center;justify-content:center;margin-top:14px}.status{margin-top:16px;padding:13px 14px;border-radius:14px;font-size:14px;line-height:1.5;background:#f8fafc;border:1px solid #e2e8f0}.status.error{background:#fff1f2;border-color:#fecdd3;color:#9f1239}.status.success{background:#ecfdf5;border-color:#a7f3d0;color:#065f46}.hidden{display:none!important}.account{font-size:13px;color:#475569;margin:0 0 12px;text-align:center}.fine{font-size:12px;color:#7b8794;margin-top:14px;text-align:center}
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="brand"><div class="mark">OX</div><span>OX Novels</span></div>
+    <div class="badge">RAPTOR → OX Novels</div>
+    <h1>Move your RAPTOR membership</h1>
+    <p>Your RAPTOR PayPal subscription stays unchanged. OX Novels verifies the subscription directly with PayPal and transfers its current status and history to your Google account.</p>
+    <div class="box"><strong id="planLabel">Checking migration link…</strong><span id="planMeta">Please wait.</span></div>
+    <div id="status" class="status">Checking your secure transfer link…</div>
+    <div id="authArea" class="hidden">
+      <p class="account" id="accountText"></p>
+      <div id="googleButton"></div>
+      <button id="transferButton" class="button hidden" type="button">Transfer My Membership</button>
+      <button id="logoutButton" class="button secondary hidden" type="button">Use a different Google account</button>
+    </div>
+    <p class="fine">No new PayPal charge is created by this transfer.</p>
+  </main>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const statusEl = $("status"), authArea = $("authArea"), googleButton = $("googleButton"), transferButton = $("transferButton"), logoutButton = $("logoutButton"), accountText = $("accountText");
+  let session = { loggedIn:false, user:null }, googleClientId = "";
+  const params = new URLSearchParams(location.search);
+  const claim = {
+    version: params.get("v") || "v1", raptorUserId: params.get("ru") || "", subscriptionId: params.get("sid") || "",
+    issuedAt: params.get("ts") || "", nonce: params.get("nonce") || "", pricingTier: params.get("tier") || "",
+    price: params.get("price") || "", plan: params.get("plan") || "", signature: params.get("sig") || ""
+  };
+  function setStatus(message,type=""){statusEl.textContent=message;statusEl.className="status"+(type?` ${type}`:"")}
+  async function api(path, options={}){const r=await fetch(path,{credentials:"same-origin",cache:"no-store",...options});let j={};try{j=await r.json()}catch{}if(!r.ok)throw new Error(j.error||`Request failed (${r.status}).`);return j}
+  function loadGoogle(){if(window.google?.accounts?.id)return Promise.resolve();return new Promise((resolve,reject)=>{const s=document.createElement("script");s.src="https://accounts.google.com/gsi/client";s.async=true;s.defer=true;s.onload=()=>window.google?.accounts?.id?resolve():reject(new Error("Google sign-in did not initialize."));s.onerror=()=>reject(new Error("Unable to load Google sign-in."));document.head.appendChild(s)})}
+  async function renderGoogle(){googleButton.textContent="Loading Google sign-in…";const config=await api("/api/auth/google/config");await loadGoogle();if(!config.enabled||!config.clientId)throw new Error("Google sign-in is not configured.");if(googleClientId!==config.clientId){window.google.accounts.id.initialize({client_id:config.clientId,callback:finishGoogle,ux_mode:"popup"});googleClientId=config.clientId}googleButton.innerHTML="";window.google.accounts.id.renderButton(googleButton,{type:"standard",theme:"outline",size:"large",text:"continue_with",shape:"pill",logo_alignment:"left",width:Math.max(240,Math.min(420,Math.round(googleButton.getBoundingClientRect().width||360)))})}
+  async function finishGoogle(response){const credential=String(response?.credential||"");if(!credential)return;setStatus("Signing you in…");await api("/api/auth/google",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({credential})});await loadSession();setStatus("Google sign-in complete. Confirm the account below, then transfer your membership.")}
+  async function loadSession(){session=await api("/api/session");authArea.classList.remove("hidden");if(session.loggedIn&&session.user){googleButton.classList.add("hidden");transferButton.classList.remove("hidden");logoutButton.classList.remove("hidden");accountText.textContent=`Signed in as ${session.user.name||"Member"} · ${session.user.email||""}`;}else{googleButton.classList.remove("hidden");transferButton.classList.add("hidden");logoutButton.classList.add("hidden");accountText.textContent="Continue with the Google account you want to use on OX Novels.";await renderGoogle()}}
+  async function preview(){const result=await api("/api/migration/raptor/preview",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(claim)});$("planLabel").textContent=result.plan||"RAPTOR Membership";$("planMeta").textContent=result.price?`Existing RAPTOR PayPal membership · $${result.price}/month`:"Existing RAPTOR PayPal membership";setStatus("Secure RAPTOR transfer link verified.","success");await loadSession()}
+  async function transfer(){transferButton.disabled=true;transferButton.textContent="Verifying with PayPal…";setStatus("Checking your existing RAPTOR subscription directly with PayPal…");try{const result=await api("/api/migration/raptor/claim",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(claim)});const paypalStatus=String(result.status||"UNKNOWN").toUpperCase();if(paypalStatus==="ACTIVE"){setStatus("Transfer complete. Your existing RAPTOR membership is active on OX.","success");transferButton.textContent="Membership Transferred ✓";}else{setStatus(`Transfer complete. Your RAPTOR subscription history is now linked to OX. Current PayPal status: ${paypalStatus}.`,"success");transferButton.textContent="RAPTOR Account Transferred ✓";}logoutButton.classList.add("hidden");setTimeout(()=>location.href="/",2600)}catch(e){setStatus(e.message||"Unable to transfer membership.","error");transferButton.disabled=false;transferButton.textContent="Try Transfer Again"}}
+  async function logout(){await fetch("/api/auth/logout",{method:"POST",credentials:"same-origin"}).catch(()=>{});session={loggedIn:false,user:null};setStatus("Choose the Google account you want to use for OX Novels.");await loadSession()}
+  transferButton.addEventListener("click",()=>void transfer());logoutButton.addEventListener("click",()=>void logout());
+  preview().catch(e=>{setStatus(e.message||"This RAPTOR transfer link is invalid or expired.","error");$("planLabel").textContent="Transfer link unavailable";$("planMeta").textContent="Return to RAPTOR and open a new transfer link."});
+})();
+</script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" data-cf-beacon='{"version":"2024.11.0","token":"b383ff1e797f4f0d88d4da378fd57cee","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

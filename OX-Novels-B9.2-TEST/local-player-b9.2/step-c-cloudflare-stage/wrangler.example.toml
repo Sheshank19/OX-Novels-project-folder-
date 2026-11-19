@@ -1,0 +1,19 @@
+# B9.2 Step C: COPY this file to wrangler.toml inside THIS stage-only folder.
+# Never merge into the production Player wrangler config.
+name = "ox-b92-step-c-synthetic-stage"
+main = "src/worker.mjs"
+compatibility_date = "2026-10-15"
+workers_dev = true
+
+[vars]
+STAGE_MODE = "synthetic-only"
+
+[[kv_namespaces]]
+binding = "STAGE_KV"
+id = "6f43b6833bc047b8b1b0f7a79b510de2"
+
+[[d1_databases]]
+binding = "STAGE_DB"
+database_name = "ox-b92-step-c-synthetic-db"
+database_id = "2d46b2af-8914-4ca3-99b0-ac995ec9d017"
+migrations_dir = "migrations"

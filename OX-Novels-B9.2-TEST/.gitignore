@@ -1,0 +1,13 @@
+node_modules/
+.wrangler/
+.dev.vars
+.env
+.env.*
+*.log
+local-audio-lab/config/resolver.local.json
+local-player-b4/.player-account-id
+local-player-b5/.player-account-id
+local-player-b6/.player-account-id
+local-player-b6/PRODUCTION-STORY-SNAPSHOT.json
+.dev.vars.live-backup
+local-player-handoff/.env.player-handoff

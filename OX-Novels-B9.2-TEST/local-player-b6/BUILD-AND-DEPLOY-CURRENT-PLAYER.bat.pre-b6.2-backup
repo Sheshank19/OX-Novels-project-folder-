@@ -1,0 +1,21 @@
+@echo off
+setlocal
+cd /d "%~dp0"
+if not exist "..\local-player-b5\BUILD-B5.bat" (
+  echo local-player-b5 was not found beside local-player-b6.
+  pause
+  exit /b 1
+)
+call "..\local-player-b5\BUILD-B5.bat"
+if errorlevel 1 goto :fail
+call "..\local-player-b5\DEPLOY-B5-TO-PLAYER-ACCOUNT.bat"
+if errorlevel 1 goto :fail
+echo.
+echo B6 reconciliation build/deploy completed.
+pause
+exit /b 0
+:fail
+echo.
+echo Build/deploy failed. Review the output above. Existing deployed Player version remains until a successful deploy.
+pause
+exit /b 1

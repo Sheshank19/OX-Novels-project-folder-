@@ -1,0 +1,11 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+const here = path.dirname(fileURLToPath(import.meta.url));
+const b4Root = path.resolve(here, '..');
+const root = path.resolve(b4Root, '..');
+const backup = path.join(b4Root, 'backups', 'index.js.before-b4-handoff-metadata');
+const target = path.join(root, 'src', 'index.js');
+if (!fs.existsSync(backup)) throw new Error('No B4 handoff backup was found.');
+fs.copyFileSync(backup, target);
+console.log('Restored src/index.js to the pre-B4-handoff-metadata copy.');

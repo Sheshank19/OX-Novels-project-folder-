@@ -1,0 +1,47 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import readline from 'node:readline/promises';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import { stdin as input, stdout as output } from 'node:process';
+import { currentStories, loadPublishedManifest, reportsDir } from './common.mjs';
+
+const rl = readline.createInterface({ input, output });
+let n = Number(process.argv[2] || 0);
+if (!Number.isFinite(n) || n <= 0) {
+  n = Number(await rl.question('Maximum stories to prepare in this batch [5]: ') || 5);
+}
+rl.close();
+n = Math.max(1, Math.min(50, Math.floor(n)));
+
+const state = currentStories();
+const pub = new Map((loadPublishedManifest().catalogs || []).map(x => [String(x.storyId), x]));
+const targets = state.stories
+  .filter(s => s.visible && s.hasDriveSource && (!pub.has(s.id) || String(pub.get(s.id).sourceVersion) !== s.sourceVersion))
+  .slice(0, n);
+
+if (!targets.length) {
+  console.log('No missing/source-changed visible stories need preparation.');
+  process.exit(0);
+}
+
+console.log(`Preparing ${targets.length} story/stories from ${state.source}. Failures are logged and the batch continues.`);
+const results = [];
+
+// IMPORTANT: fileURLToPath converts file:///C:/... to a true Windows path.
+// Using URL.pathname directly can produce \C:\... on Windows, which Node then
+// resolves as C:\C:\... and causes MODULE_NOT_FOUND.
+const script = path.join(path.dirname(fileURLToPath(import.meta.url)), 'sync-story.mjs');
+
+for (let i = 0; i < targets.length; i++) {
+  const s = targets[i];
+  console.log(`\n[${i + 1}/${targets.length}] ${s.id} — ${s.title}`);
+  const r = spawnSync(process.execPath, [script, s.id], { stdio: 'inherit' });
+  results.push({ storyId: s.id, title: s.title, ok: r.status === 0, exitCode: r.status });
+}
+
+fs.mkdirSync(reportsDir, { recursive: true });
+const out = path.join(reportsDir, 'last-batch-sync.json');
+fs.writeFileSync(out, JSON.stringify({ generatedAt: new Date().toISOString(), source: state.source, results }, null, 2));
+console.log(`\nBatch complete: ${results.filter(x => x.ok).length} succeeded, ${results.filter(x => !x.ok).length} failed.`);
+console.log(`Report: ${out}`);
