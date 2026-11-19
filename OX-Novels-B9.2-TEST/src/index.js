@@ -6690,6 +6690,8 @@ async function handleLifetimeStoryCaptureOrder(request, env) {
         .bind(`${user.email} · ${checkout.title_snapshot} · $${LIFETIME_STORY_PRICE} · ${captureId}.`, now)
     ]);
 
+    await recordPromotionPaymentAttribution(env, user.id, "paypal-lifetime:" + captureId, LIFETIME_STORY_PRICE, LIFETIME_STORY_CURRENCY, "paypal", now);
+
     await createAdminNotification(env, {
       type: "payment",
       title: "Lifetime story purchased",
@@ -7479,6 +7481,9 @@ async function handlePaypalWebhook(request, env) {
         VALUES('paypal',?,?,?,?,?,?,?, 'Processed',?,?,?,?)`).bind(eventId,type,userId,subscriptionId||null,amount,currency,config.mode,event.create_time||null,now,userSnapshot?.name||"",userSnapshot?.email||""),
       env.DB.prepare("INSERT INTO activity_log(type,title,detail,created_at) VALUES('payment','PayPal webhook processed',?,?)").bind(`${type}${subscriptionId ? ` · ${subscriptionId}` : ""}.`,now)
     ]);
+    if (userId && (type === "PAYMENT.SALE.COMPLETED" || lifetime?.handled)) {
+      await recordPromotionPaymentAttribution(env, userId, eventId, amount, currency || "USD", "paypal", event.create_time || now);
+    }
     const webhookNotice = lifetime?.notice || {
       "PAYMENT.SALE.COMPLETED": ["Payment received", amount ? `${currency || "USD"} ${amount} recurring payment completed.` : "Recurring membership payment completed.", "finance"],
       "BILLING.SUBSCRIPTION.PAYMENT.FAILED": ["Payment failed", "A recurring membership payment failed and needs follow-up.", "finance"],
