@@ -7487,8 +7487,11 @@ async function handlePaypalWebhook(request, env) {
         VALUES('paypal',?,?,?,?,?,?,?, 'Processed',?,?,?,?)`).bind(eventId,type,userId,subscriptionId||null,amount,currency,config.mode,event.create_time||null,now,userSnapshot?.name||"",userSnapshot?.email||""),
       env.DB.prepare("INSERT INTO activity_log(type,title,detail,created_at) VALUES('payment','PayPal webhook processed',?,?)").bind(`${type}${subscriptionId ? ` · ${subscriptionId}` : ""}.`,now)
     ]);
-    if (userId && (type === "PAYMENT.SALE.COMPLETED" || lifetime?.handled)) {
+    if (userId && type === "PAYMENT.SALE.COMPLETED") {
       await recordPromotionPaymentAttribution(env, userId, eventId, amount, currency || "USD", "paypal", event.create_time || now);
+    } else if (userId && lifetime?.handled && type === "PAYMENT.CAPTURE.COMPLETED") {
+      const captureRef = String(resource.id || eventId);
+      await recordPromotionPaymentAttribution(env, userId, "paypal-lifetime:" + captureRef, amount, currency || "USD", "paypal", event.create_time || now);
     }
     const webhookNotice = lifetime?.notice || {
       "PAYMENT.SALE.COMPLETED": ["Payment received", amount ? `${currency || "USD"} ${amount} recurring payment completed.` : "Recurring membership payment completed.", "finance"],
