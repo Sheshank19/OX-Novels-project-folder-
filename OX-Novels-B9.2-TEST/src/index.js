@@ -2098,7 +2098,7 @@ async function userAccessContext(env, user) {
     membershipStatus,
     membershipActive: user.account_status === "Active" && ["Active","Granted"].includes(membershipStatus),
     paidOnce: testMode ? testFlag(override.simulate_paid_once) : Boolean(user.paid_once_at),
-    chatAccess: user.account_status === "Active" && (testMode ? testFlag(override.chat_enabled) : Boolean(user.paid_once_at)),
+    chatAccess: user.account_status === "Active" && (Boolean(user.manual_chat_unlocked_at) || (testMode ? testFlag(override.chat_enabled) : Boolean(user.paid_once_at))),
     telegramEligible: user.account_status === "Active" && (testMode ? testFlag(override.telegram_enabled) : Boolean(user.paid_once_at)),
     lifetimeEnabled: testMode && testFlag(override.lifetime_enabled),
     lifetimeStoryId: testMode ? String(override.lifetime_story_id || "") : "",
@@ -2276,6 +2276,8 @@ function adminUserFromRow(row, subscription = null, lifetimePurchases = [], tele
     accessUntil: row.membership_expires_at || null,
     paidOnce: Boolean(row.paid_once_at),
     paidOnceAt: row.paid_once_at || null,
+    manualChatUnlocked: Boolean(row.manual_chat_unlocked_at),
+    manualChatUnlockedAt: row.manual_chat_unlocked_at || null,
     testControls: testOverride ? {
       configured:true,
       enabled:testFlag(testOverride.enabled),
@@ -3501,6 +3503,9 @@ async function applyAdminUserAction(env, userId, action) {
     await env.DB.prepare(`UPDATE users SET membership_status='Cancelled', membership_expires_at=NULL,
       payment_status='Cancelled', updated_at=? WHERE id=?`).bind(now, userId).run();
     detail = `${row.email} membership access was cancelled.`;
+  } else if (action === "unlock-chat") {
+    await env.DB.prepare("UPDATE users SET manual_chat_unlocked_at=COALESCE(manual_chat_unlocked_at,?),updated_at=? WHERE id=?").bind(now, now, userId).run();
+    detail = row.email + " received a manual Chat access grant. No payment or membership record was changed.";
   } else if (action === "block") {
     const next = row.account_status === "Blocked" ? "Active" : "Blocked";
     await env.DB.prepare("UPDATE users SET account_status=?, updated_at=? WHERE id=?").bind(next, now, userId).run();
@@ -3516,6 +3521,7 @@ async function applyAdminUserAction(env, userId, action) {
   const notificationTitle = action === "grant" ? "Membership granted"
     : action === "extend" ? "Membership extended"
     : action === "cancel" ? "Membership access cancelled"
+    : action === "unlock-chat" ? "Chat access manually unlocked"
     : row.account_status === "Blocked" ? "User unblocked" : "User blocked";
   await createAdminNotification(env, {
     type: "user", title: notificationTitle, body: detail, route: "users", userId,
@@ -5555,6 +5561,10 @@ async function handleDodoTestWebhook(request, env) {
         .bind(`${type}${subscriptionId ? ` · ${subscriptionId}` : ""}${saved?.status ? ` · ${saved.status}` : ""}.`, now)
     ]);
 
+    if (userId && (lifetimeResult.completed || type === "payment.succeeded" || (type === "subscription.active" && amount))) {
+      await recordPromotionPaymentAttribution(env, userId, webhookId, amount, currency, "dodo", event?.timestamp || now);
+    }
+
     return json({
       ok: true,
       event: type,
@@ -7490,6 +7500,124 @@ async function handlePaypalWebhook(request, env) {
   }
 }
 
+
+// ---------------------------------------------------------------------------
+// Promotions: source attribution, partner management and immutable payment snapshots
+// ---------------------------------------------------------------------------
+async function promotionOptionsForUser(env, userId) {
+  const [partners, attribution] = await Promise.all([
+    env.DB.prepare("SELECT id,name,channel_url FROM promotion_partners WHERE status='active' ORDER BY name COLLATE NOCASE").all(),
+    env.DB.prepare("SELECT partner_id,source_label,partner_name_snapshot,selected_at FROM promotion_customer_attributions WHERE user_id=? LIMIT 1").bind(userId).first().catch(() => null)
+  ]);
+  return { partners: partners.results || [], attribution: attribution ? {
+    partnerId: attribution.partner_id || "", sourceLabel: attribution.source_label || "",
+    partnerName: attribution.partner_name_snapshot || "", selectedAt: attribution.selected_at || null
+  } : null };
+}
+async function handlePromotionOptions(request, env) {
+  const user = await getCurrentUser(request, env);
+  if (!user) return json({ error: "Log in before continuing to purchase.", code: "LOGIN_REQUIRED" }, 401);
+  try { return json({ ok: true, ...await promotionOptionsForUser(env, user.id) }); }
+  catch { return json({ error: "Promotions are not initialized. Apply the local database migrations first." }, 503); }
+}
+async function handlePromotionAttribution(request, env) {
+  const user = await getCurrentUser(request, env);
+  if (!user) return json({ error: "Log in before continuing to purchase.", code: "LOGIN_REQUIRED" }, 401);
+  let body = {};
+  try { body = await request.json(); } catch { return json({ error: "Invalid questionnaire response." }, 400); }
+  const partnerId = String(body.partnerId || "").trim().slice(0, 100);
+  const sourceLabel = String(body.sourceLabel || "").trim().slice(0, 180);
+  let partner = null;
+  if (partnerId) {
+    partner = await env.DB.prepare("SELECT id,name FROM promotion_partners WHERE id=? AND status='active' LIMIT 1").bind(partnerId).first();
+    if (!partner) return json({ error: "That referral source is no longer available. Refresh and choose again." }, 409);
+  }
+  if (!partner && !sourceLabel) return json({ error: "Choose where you heard about OX Novels." }, 400);
+  const label = partner ? partner.name : sourceLabel;
+  const now = new Date().toISOString();
+  const existing = await env.DB.prepare("SELECT selected_at FROM promotion_customer_attributions WHERE user_id=? LIMIT 1").bind(user.id).first().catch(() => null);
+  const selectedAt = existing && existing.selected_at ? existing.selected_at : now;
+  await env.DB.prepare("INSERT INTO promotion_customer_attributions(id,user_id,partner_id,source_label,partner_name_snapshot,selected_at,updated_at) VALUES(?,?,?,?,?,?,?) ON CONFLICT(user_id) DO UPDATE SET partner_id=excluded.partner_id,source_label=excluded.source_label,partner_name_snapshot=excluded.partner_name_snapshot,updated_at=excluded.updated_at")
+    .bind(crypto.randomUUID(), user.id, partner ? partner.id : null, partner ? "Partner referral" : sourceLabel, label, selectedAt, now).run();
+  return json({ ok: true, saved: true, source: label });
+}
+async function recordPromotionPaymentAttribution(env, userId, eventRef, amount, currency, provider, purchasedAt) {
+  if (!userId || !eventRef) return;
+  const attribution = await env.DB.prepare("SELECT partner_id,source_label,partner_name_snapshot FROM promotion_customer_attributions WHERE user_id=? LIMIT 1").bind(userId).first().catch(() => null);
+  if (!attribution) return;
+  await env.DB.prepare("INSERT OR IGNORE INTO promotion_payment_attributions(id,user_id,event_ref,partner_id,source_label,partner_name_snapshot,amount,currency,provider,purchased_at,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)")
+    .bind(crypto.randomUUID(), userId, String(eventRef), attribution.partner_id || null, attribution.source_label || "",
+      attribution.partner_name_snapshot || "", String(amount || ""), String(currency || "USD"), String(provider || ""),
+      purchasedAt || new Date().toISOString(), new Date().toISOString()).run().catch(() => null);
+}
+async function handleAdminPromotions(request, env) {
+  if (!(await isAdminAuthenticated(request, env))) return json({ error: "Admin login required." }, 401);
+  try {
+    const [partners, customers] = await Promise.all([
+      env.DB.prepare("SELECT p.id,p.name,p.channel_url,p.created_at,(SELECT COUNT(*) FROM promotion_customer_attributions c WHERE c.partner_id=p.id) AS customer_count,(SELECT COUNT(*) FROM promotion_payment_attributions h WHERE h.partner_id=p.id) AS payment_count FROM promotion_partners p WHERE p.status='active' ORDER BY p.name COLLATE NOCASE").all(),
+      env.DB.prepare("SELECT c.user_id,c.partner_id,c.source_label,c.partner_name_snapshot,c.selected_at,c.updated_at,u.name,u.email,(SELECT COUNT(*) FROM promotion_payment_attributions h WHERE h.user_id=c.user_id) AS payment_count FROM promotion_customer_attributions c LEFT JOIN users u ON u.id=c.user_id ORDER BY c.updated_at DESC").all()
+    ]);
+    return json({ ok: true, partners: partners.results || [], customers: customers.results || [] });
+  } catch { return json({ error: "Promotions tables are missing. Apply migrations 0026 and 0027 first." }, 503); }
+}
+async function handleAdminPromotionPartnerCreate(request, env) {
+  if (!(await isAdminAuthenticated(request, env))) return json({ error: "Admin login required." }, 401);
+  let body = {};
+  try { body = await request.json(); } catch { return json({ error: "Invalid JSON." }, 400); }
+  const name = String(body.name || "").trim().replace(/\s+/g, " ").slice(0, 100);
+  const channelUrl = String(body.channelUrl || "").trim().slice(0, 500);
+  if (!name) return json({ error: "Enter the friend's name or channel name." }, 400);
+  if (channelUrl) {
+    try { const u = new URL(channelUrl); if (!["http:","https:"].includes(u.protocol)) throw new Error(); }
+    catch { return json({ error: "Enter a valid YouTube or website URL." }, 400); }
+  }
+  const now = new Date().toISOString(), id = crypto.randomUUID();
+  await env.DB.prepare("INSERT INTO promotion_partners(id,name,channel_url,status,created_at,updated_at) VALUES(?,?,?,'active',?,?)").bind(id,name,channelUrl,now,now).run();
+  await env.DB.prepare("INSERT INTO activity_log(type,title,detail,created_at) VALUES('system','Promotion partner added',?,?)").bind(name,now).run().catch(() => null);
+  return json({ ok: true, id, name, channelUrl });
+}
+async function handleAdminPromotionPartnerDelete(request, env, partnerId) {
+  if (!(await isAdminAuthenticated(request, env))) return json({ error: "Admin login required." }, 401);
+  const partner = await env.DB.prepare("SELECT id,name FROM promotion_partners WHERE id=?").bind(partnerId).first();
+  if (!partner) return json({ error: "Friend not found in Promotions." }, 404);
+  await env.DB.batch([
+    env.DB.prepare("DELETE FROM promotion_customer_attributions WHERE partner_id=?").bind(partnerId),
+    env.DB.prepare("UPDATE promotion_payment_attributions SET partner_id=NULL WHERE partner_id=?").bind(partnerId),
+    env.DB.prepare("DELETE FROM promotion_partners WHERE id=?").bind(partnerId),
+    env.DB.prepare("INSERT INTO activity_log(type,title,detail,created_at) VALUES('system','Promotion partner deleted',?,?)").bind(partner.name + ". Historical payment snapshots were retained.",new Date().toISOString())
+  ]);
+  return json({ ok: true, deleted: true, historicalPaymentsRetained: true });
+}
+async function handleAdminPromotionCustomerUpdate(request, env, userId) {
+  if (!(await isAdminAuthenticated(request, env))) return json({ error: "Admin login required." }, 401);
+  let body = {};
+  try { body = await request.json(); } catch { return json({ error: "Invalid JSON." }, 400); }
+  const existing = await env.DB.prepare("SELECT * FROM promotion_customer_attributions WHERE user_id=?").bind(userId).first();
+  if (!existing) return json({ error: "This customer has no Promotions record." }, 404);
+  const partnerId = String(body.partnerId || "").trim();
+  let partner = null;
+  if (partnerId) {
+    partner = await env.DB.prepare("SELECT id,name FROM promotion_partners WHERE id=? AND status='active'").bind(partnerId).first();
+    if (!partner) return json({ error: "Choose an active promotion partner." }, 400);
+  }
+  const sourceLabel = partner ? "Partner referral" : String(body.sourceLabel || "Other").trim().slice(0,180);
+  const snapshot = partner ? partner.name : sourceLabel, now = new Date().toISOString();
+  await env.DB.prepare("UPDATE promotion_customer_attributions SET partner_id=?,source_label=?,partner_name_snapshot=?,updated_at=? WHERE user_id=?")
+    .bind(partner ? partner.id : null,sourceLabel,snapshot,now,userId).run();
+  await env.DB.prepare("INSERT INTO activity_log(type,title,detail,created_at) VALUES('user','Promotion attribution corrected',?,?)")
+    .bind(userId + ": " + (existing.partner_name_snapshot || existing.source_label || "Unknown") + " → " + snapshot + ". Original selection date retained: " + existing.selected_at + ".",now).run().catch(() => null);
+  return json({ ok: true, updated: true, selectedAt: existing.selected_at, partnerName: snapshot });
+}
+async function handleAdminPromotionCustomerDelete(request, env, userId) {
+  if (!(await isAdminAuthenticated(request, env))) return json({ error: "Admin login required." }, 401);
+  const existing = await env.DB.prepare("SELECT user_id FROM promotion_customer_attributions WHERE user_id=?").bind(userId).first();
+  if (!existing) return json({ error: "Promotions customer not found." }, 404);
+  await env.DB.prepare("DELETE FROM promotion_customer_attributions WHERE user_id=?").bind(userId).run();
+  await env.DB.prepare("INSERT INTO activity_log(type,title,detail,created_at) VALUES('user','Promotions customer deleted',?,?)")
+    .bind(userId + ". OX account, memberships and payment history were not deleted.",new Date().toISOString()).run().catch(() => null);
+  return json({ ok: true, deleted: true, oxAccountPreserved: true, historicalPaymentsRetained: true });
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -7507,6 +7635,16 @@ export default {
       assetUrl.search = url.search;
       return env.ASSETS.fetch(new Request(assetUrl.toString(), request));
     }
+
+    if (pathname === "/api/promotions/options" && request.method === "GET") return handlePromotionOptions(request, env);
+    if (pathname === "/api/promotions/attribution" && request.method === "POST") return handlePromotionAttribution(request, env);
+    if (pathname === "/api/admin/promotions" && request.method === "GET") return handleAdminPromotions(request, env);
+    if (pathname === "/api/admin/promotions/partners" && request.method === "POST") return handleAdminPromotionPartnerCreate(request, env);
+    const promotionPartnerMatch = pathname.match(/^\/api\/admin\/promotions\/partners\/([^/]+)$/);
+    if (promotionPartnerMatch && request.method === "DELETE") return handleAdminPromotionPartnerDelete(request, env, decodeURIComponent(promotionPartnerMatch[1]));
+    const promotionCustomerMatch = pathname.match(/^\/api\/admin\/promotions\/customers\/([^/]+)$/);
+    if (promotionCustomerMatch && request.method === "PUT") return handleAdminPromotionCustomerUpdate(request, env, decodeURIComponent(promotionCustomerMatch[1]));
+    if (promotionCustomerMatch && request.method === "DELETE") return handleAdminPromotionCustomerDelete(request, env, decodeURIComponent(promotionCustomerMatch[1]));
 
     if (pathname === "/api/site" && request.method === "GET") return handlePublicSite(env);
     if (pathname === "/api/stories" && request.method === "GET") return handlePublicStories(env);
