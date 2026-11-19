@@ -1,0 +1,38 @@
+name: OX Novels promotions validation
+
+on:
+  push:
+    branches:
+      - feature/ox-promotions-chat-questionnaire
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: OX-Novels-B9.2-TEST
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: OX-Novels-B9.2-TEST/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/index.js
+          node --check public/assets/admin.js
+          node --check public/assets/app.js
+          node --check public/assets/lifetime.js
+      - name: Apply all D1 migrations to an isolated local database
+        run: npx wrangler d1 migrations apply ox-novels-db --local
