@@ -1043,7 +1043,7 @@ async function saveCoreState(env, payload) {
 
 const D1_BACKUP_FORMAT = "ox-novels-d1-backup";
 const D1_BACKUP_VERSION = 1;
-const D1_BACKUP_SCHEMA_VERSION = 25;
+const D1_BACKUP_SCHEMA_VERSION = 27;
 
 const D1_BACKUP_TABLES = [
   { name: "site_settings", columns: ["key","value","updated_at"] },
@@ -1056,6 +1056,9 @@ const D1_BACKUP_TABLES = [
   { name: "user_test_overrides", columns: ["user_id","enabled","simulate_paid_once","chat_enabled","telegram_enabled","membership_status","lifetime_enabled","lifetime_story_id","purchased_section_enabled","created_at","updated_at"] },
   { name: "stories", columns: ["id","title","description","genre","status","cover","visible","sort_order","source_url","drive_url","checked","automatic_check","manual_lock","confidence","status_last_checked","genre_last_checked","created_at","updated_at","drive_root_id","drive_root_url","drive_root_name","drive_root_owner_email","drive_path"] },
   { name: "users", columns: ["id","name","email","password_hash","password_salt","password_iterations","account_status","membership_status","membership_tier_id","membership_plan","membership_started_at","membership_expires_at","payment_status","latest_amount","paid_once_at","manual_chat_unlocked_at","created_at","last_login_at","updated_at"] },
+  { name: "promotion_partners", columns: ["id","name","channel_url","status","created_at","updated_at"] },
+  { name: "promotion_customer_attributions", columns: ["id","user_id","partner_id","source_label","partner_name_snapshot","selected_at","updated_at"] },
+  { name: "promotion_payment_attributions", columns: ["id","user_id","event_ref","partner_id","source_label","partner_name_snapshot","amount","currency","provider","purchased_at","created_at"] },
   { name: "lifetime_story_products", columns: ["id","current_story_id","state","created_at","updated_at"] },
   { name: "story_identity_history", columns: ["id","permanent_story_id","story_id_snapshot","title","title_key","drive_url","drive_folder_id","cover","recorded_at"] },
   { name: "story_lifetime_purchases", columns: ["id","user_id","user_name_snapshot","user_email_snapshot","permanent_story_id","original_story_id","original_title","original_drive_url","original_drive_folder_id","original_cover","amount","currency","provider","environment","paypal_order_id","paypal_capture_id","purchase_status","entitlement_status","purchased_at","updated_at"] },
@@ -1157,6 +1160,9 @@ async function clearRestorableData(env) {
     "DELETE FROM story_lifetime_purchases",
     "DELETE FROM story_identity_history",
     "DELETE FROM lifetime_story_products",
+    "DELETE FROM promotion_payment_attributions",
+    "DELETE FROM promotion_customer_attributions",
+    "DELETE FROM promotion_partners",
     "DELETE FROM finance_record_overrides",
     "DELETE FROM admin_notifications",
     "DELETE FROM payment_checkout_sessions",
@@ -1224,7 +1230,7 @@ async function restoreD1Backup(env, backup) {
   await ensureUserClientContextTable(env);
   await clearRestorableData(env);
   const restoreOrder = [
-    "site_settings","membership_tiers","posts","stories","users","lifetime_story_products","story_identity_history","story_lifetime_purchases","lifetime_story_assignments",
+    "site_settings","membership_tiers","posts","stories","users","promotion_partners","promotion_customer_attributions","promotion_payment_attributions","lifetime_story_products","story_identity_history","story_lifetime_purchases","lifetime_story_assignments",
     "user_google_auth","user_client_context","story_covers","media_assets",
     "payment_provider_settings","membership_payment_plans","member_subscriptions","raptor_migration_claims","payment_events","finance_record_overrides",
     "chat_messages","chat_broadcasts","post_read_state","telegram_connections","telegram_link_tokens","user_test_overrides","admin_notifications","activity_log"
