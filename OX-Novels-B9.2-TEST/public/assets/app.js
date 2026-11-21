@@ -2878,6 +2878,53 @@ function dodoLifetimeTestModeEnabled() {
   }
 }
 
+async function showPurchaseSourceQuestionnaire(onContinue){
+  if(!state.loggedIn){openGoogleLogin();showToast("Sign in first, then continue with your purchase.");return;}
+  let options;
+  try{
+    const response=await fetch("/api/promotions/options",{credentials:"same-origin",cache:"no-store"});
+    options=await response.json().catch(()=>({}));
+    if(!response.ok)throw new Error(options.error||"Unable to load referral sources.");
+  }catch(error){showToast(error.message||"Unable to load the purchase questionnaire.");return;}
+  const partners=Array.isArray(options.partners)?options.partners:[];
+  const previous=options.attribution||{};
+  const layer=document.createElement("div");
+  layer.className="purchase-source-layer";
+  layer.style.cssText="position:fixed;inset:0;z-index:10020;background:rgba(8,20,28,.62);display:grid;place-items:center;padding:18px";
+  const partnerMarkup=partners.map(p=>'<label style="display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid #e7ecef"><input type="radio" name="oxPurchaseSource" value="partner:'+escapeHtml(p.id)+'" '+(previous.partnerId===p.id?"checked":"")+'><span>'+escapeHtml(p.name)+'</span></label>').join("");
+  const officialChecked=!previous.partnerId&&String(previous.sourceLabel||"").includes("Official")?"checked":"";
+  const otherChecked=!previous.partnerId&&!officialChecked?"checked":"";
+  layer.innerHTML='<div role="dialog" aria-modal="true" aria-labelledby="oxPurchaseSourceTitle" style="width:min(100%,480px);max-height:90vh;overflow:auto;background:#fff;color:#18252c;border-radius:18px;padding:22px;box-shadow:0 18px 60px rgba(0,0,0,.25)">'+
+    '<div style="display:flex;justify-content:space-between;gap:12px;align-items:start"><div><h2 id="oxPurchaseSourceTitle" style="margin:0 0 8px;font-size:21px">How did you hear about OX Novels?</h2><p style="margin:0 0 14px;color:#5c6b73">Select the YouTube channel or other source that introduced you to our website.</p></div><button type="button" data-purchase-source-close aria-label="Close" style="border:0;background:transparent;font-size:26px;cursor:pointer">×</button></div>'+
+    '<form id="oxPurchaseSourceForm"><div style="display:grid;gap:0">'+
+    '<label style="display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid #e7ecef"><input type="radio" name="oxPurchaseSource" value="official" '+officialChecked+'><span>OX Novels — Official YouTube</span></label>'+
+    partnerMarkup+
+    '<label style="display:flex;gap:10px;align-items:center;padding:10px 0"><input type="radio" name="oxPurchaseSource" value="other" '+otherChecked+'><span>Other source</span></label></div>'+
+    '<p id="oxPurchaseSourceError" role="alert" style="color:#b42318;min-height:18px;margin:8px 0"></p>'+
+    '<div style="display:flex;gap:10px;justify-content:flex-end"><button type="button" data-purchase-source-close style="padding:11px 16px;border:1px solid #d7dfe3;background:#fff;border-radius:10px">Cancel</button><button type="submit" style="padding:11px 18px;border:0;background:#13a99b;color:#fff;border-radius:10px;font-weight:700">Continue to purchase</button></div></form></div>';
+  document.body.appendChild(layer);
+  const close=()=>layer.remove();
+  $("[data-purchase-source-close]",layer).forEach(button=>button.addEventListener("click",close));
+  layer.addEventListener("click",event=>{if(event.target===layer)close()});
+  const form=$("#oxPurchaseSourceForm",layer),submit=form.querySelector('button[type="submit"]'),errorNode=$("#oxPurchaseSourceError",layer);
+  form.onsubmit=async event=>{
+    event.preventDefault();
+    const selected=form.querySelector('input[name="oxPurchaseSource"]:checked');
+    if(!selected){errorNode.textContent="Please choose where you heard about OX Novels.";return;}
+    submit.disabled=true;submit.textContent="Saving…";errorNode.textContent="";
+    let body={partnerId:"",sourceLabel:""};
+    if(selected.value.startsWith("partner:"))body.partnerId=selected.value.slice(8);
+    else body.sourceLabel=selected.value==="official"?"OX Novels — Official YouTube":"Other source";
+    try{
+      const response=await fetch("/api/promotions/attribution",{method:"POST",credentials:"same-origin",headers:{"content-type":"application/json"},body:JSON.stringify(body)});
+      const payload=await response.json().catch(()=>({}));
+      if(!response.ok)throw new Error(payload.error||"Unable to save your answer.");
+      close();
+      await onContinue();
+    }catch(err){errorNode.textContent=err.message||"Unable to save your answer.";submit.disabled=false;submit.textContent="Continue to purchase";}
+  };
+}
+
 async function beginDodoLifetimeStoryPayment(story, actionButton) {
   const originalText = actionButton.textContent;
   const startedAt = Date.now();
@@ -2920,7 +2967,7 @@ async function beginDodoLifetimeStoryPayment(story, actionButton) {
   }
 }
 
-async function beginLifetimeStoryPayment(story = state.selectedStory, actionButton = els.dialogAction) {
+async function beginLifetimeStoryPaymentAfterQuestionnaire(story = state.selectedStory, actionButton = els.dialogAction) {
   if (!story || !actionButton) return;
   if (dodoLifetimeTestModeEnabled()) {
     await beginDodoLifetimeStoryPayment(story, actionButton);
@@ -2970,6 +3017,11 @@ async function beginLifetimeStoryPayment(story = state.selectedStory, actionButt
       actionButton.textContent = originalText;
     }
   }
+}
+
+async function beginLifetimeStoryPayment(story = state.selectedStory, actionButton = els.dialogAction) {
+  if (!story || !actionButton) return;
+  await showPurchaseSourceQuestionnaire(() => beginLifetimeStoryPaymentAfterQuestionnaire(story, actionButton));
 }
 
 async function handleLifetimeDodoTestReturn() {
@@ -3217,8 +3269,10 @@ els.membershipTrack?.addEventListener("click", event => {
   const button = event.target.closest(".membership-join-button");
   if (!button) return;
   const tierId = button.dataset.tierId || button.closest("[data-tier-id]")?.dataset.tierId || "";
-  if (dodoTestCheckoutEnabled()) openDodoTestMembershipCheckout(tierId);
-  else openPaypalMembershipCheckout(tierId);
+  void showPurchaseSourceQuestionnaire(() => {
+    if (dodoTestCheckoutEnabled()) return openDodoTestMembershipCheckout(tierId);
+    return openPaypalMembershipCheckout(tierId);
+  });
 });
 
 els.contactButton?.addEventListener("click", () => {
